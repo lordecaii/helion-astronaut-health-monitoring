@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HELION: Astronot Hazırlık Testi</title>
+<style>
+  body { margin:0; background:#0a141f; color:#f2f6fa; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 48px 20px 60px; }
+  h1 { font-size: 40px; margin: 0 0 6px; letter-spacing: 2px; }
+  .sub { color:#2eb7d3; font-weight: 600; margin-bottom: 14px; }
+  p { color:#c9d6e2; line-height: 1.55; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 28px 0; }
+  @media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }
+  a.card { display:block; text-decoration:none; background:#112233; border:1px solid #2a445e; border-radius:14px; padding:22px; color:#f2f6fa; }
+  a.card:hover { border-color:#2eb7d3; }
+  a.card .t { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  a.card .d { color:#c9d6e2; font-size: 14px; line-height: 1.5; }
+  a.card .go { color:#2eb7d3; font-weight: 700; margin-top: 10px; display:inline-block; }
+  .note { background:#0e1c2e; border:1px solid #2a445e; border-radius:12px; padding:16px 18px; font-size:14px; }
+  .foot { color:#8ea5b8; font-size: 13px; margin-top: 28px; line-height: 1.6; }
+  .foot a { color:#2eb7d3; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>HELION</h1>
+  <div class="sub">Astronotun Günlük Hazırlık Testi: Test et. Bil. Hazır ol.</div>
+  <p>Uzun görevdeki astronot için aktif bir öz-test bataryası: Fiziksel, Hatırlama, Sosyallik ve Tepki testleri,
+     tek rapor. Ek sensör yok; sadece laptop kamerası. Uygulama tamamen tarayıcıda çalışır.</p>
+
+  <div class="cards">
+    <a class="card" href="helion-astronot/">
+      <div class="t">Astronot Uygulaması</div>
+      <div class="d">Dört test, rapor, günlük takip ve nefes egzersizi. Testleri yapan ve raporu alan uygulama budur.</div>
+      <span class="go">Uygulamayı aç →</span>
+    </a>
+    <a class="card" href="helion-puanlayici/">
+      <div class="t">Puanlayıcı Uygulaması</div>
+      <div class="d">Sosyallik görüşmesine katılan ikinci kişinin uygulaması: görüşmeye katılır ve sohbeti puanlar.</div>
+      <span class="go">Uygulamayı aç →</span>
+    </a>
+  </div>
+
+  <div class="note">
+    <strong>Not:</strong> Fiziksel testler için tarayıcının kamera izni isteğine izin verin (Chrome/Chromium önerilir).
+    Sosyallik görüşmesi iki cihaz ister: birinde astronot, diğerinde puanlayıcı uygulaması açık olmalı.
+    Veriler yalnızca kullandığınız cihazda saklanır.
+  </div>
+
+  <div class="foot">
+    NASA Space Apps Challenge 2026 · Team HELION: Arel Zafer Okuklu, Kerem Çanta, Ali Yiğit Ok (Ankara)<br>
+    Kaynak kodu ve belgeler: <a href="https://github.com/lordecaii/helion-astronaut-health-monitoring">GitHub deposu</a>
+  </div>
+</div>
+</body>
+</html>
