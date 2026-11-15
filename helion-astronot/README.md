@@ -1,157 +1,192 @@
 # HELION
 
-**Aktif hazırlık öz-test bataryası — astronotlar için, sadece laptop kamerasıyla.**
-*Active readiness self-test battery for astronauts — laptop camera only, no sensors.*
+**Active readiness self-test battery for astronauts — laptop camera only, no sensors.**
 
-NASA Space Apps Challenge 2026 · Görev: *Create Health Monitoring Software for Astronauts on Space Missions*
-Team HELION — Arel Zafer Okuklu · Kerem Çanta · Ali Yiğit Ok (Ankara, yüz yüze)
+**Test. Know. Be Ready.**
 
-**Test et. Bil. Hazır ol.**
+NASA Space Apps Challenge 2026 · Challenge: *Create Health Monitoring Software for Astronauts
+on Space Missions*
+Team HELION — Arel Zafer Okuklu · Kerem Çanta · Ali Yiğit Ok (Ankara, in-person)
 
----
+## What is HELION?
 
-## Nedir?
+HELION is a readiness test an astronaut on a long-duration mission runs on themselves every
+day in about five minutes. No extra sensors, no wearables, no laboratory — the only hardware
+is a laptop camera.
 
-HELION, uzun görevdeki astronotun her gün ~5 dakikada kendi kendine uyguladığı bir hazırlık
-testidir. Ek sensör, giyilebilir cihaz ya da laboratuvar gerekmez; tek donanım laptop kamerasıdır.
+- **4 tests:** Physical Health, Memory, Social, Reaction (Sensitivity) — each scored 0–100
+- **1 report:** total score, the weakest area (marked red) with a personal recommendation,
+  plus a day-by-day trend chart
+- **2 score-free extras:** Daily Tracking (water, meals, sleep, mood, mission note to Earth)
+  and a Breathing Exercise
+- **Works fully offline** (one exception: the signalling step of the live video call — below)
 
-- **4 test:** Fiziksel Sağlık, Hatırlama, Sosyallik, Hassasiyet (Tepki) — her biri 0–100 puan
-- **1 rapor:** toplam skor, en zayıf alan (kırmızıyla) ve kişiye özel öneri + gün gün **eğilim grafiği**
-- **2 skorsuz ek:** Günlük Takip (su, öğün, uyku, ruh hali, Dünya'ya görev notu) ve Nefes Egzersizi
-- **Tamamen çevrimdışı çalışır** (tek istisna: canlı görüntülü görüşmenin sinyal adımı — aşağıda)
+The scientific frame is NASA's **RIDGE** model (Human Research Program): **R**adiation,
+**I**solation & Confinement, **D**istance from Earth, **G**ravity, hostile/closed
+**E**nvironments. HELION answers **I** and **D** directly, monitors the effects of **G** and
+**E**, and does not measure radiation — it cannot be measured with a camera, and we say so
+openly.
 
-Bilimsel çerçeve NASA'nın **RIDGE** modelidir (Human Research Program): Radyasyon, İzolasyon,
-Uzaklık, Yerçekimi, Kapalı Ortam. HELION, I ve D'ye doğrudan cevap verir; G ve E'nin etkilerini
-izler; radyasyonu ölçmez (kamera ile ölçülemez — bunu açıkça söylüyoruz).
+## The story — Day 112
 
-## Hızlı Başlatma
+On day 112 of a Mars transit, a solar storm cuts all communication with Earth for three days.
+During those days, engineer Arel's reaction score silently falls — **82, 74, 58** — while he
+still feels "fine", and Commander Kerem flags strain in the knee-raise movement for the second
+day in a row. HELION's report marks the weakest area and recommends rest before the critical
+course correction; the crew swaps roles, the correction goes smoothly, Arel recovers to **79**
+after rest, and the knee strain never grows into an injury — because the load was reduced in
+time. When the link returns, three days of queued results go to Houston as a single report
+file.
 
-> ⚠️ Dosyaları çift tıklayıp `file://` ile AÇMAYIN. Tarayıcılar, kamera modellerinin yerel
-> dosyalardan yüklenmesini güvenlik gereği engeller; uygulama yerel sunucudan çalışmalıdır.
+*We did not rescue anyone at the last second. We caught the error and the injury before they
+grew.*
 
-**En kolayı — başlatıcı dosyalar:**
+## Quick start
 
-- Ubuntu/Linux: klasörde terminal açıp `bash Baslat-Ubuntu.sh`
-- Windows: `Baslat-Windows.bat` dosyasını çalıştırın
+> ⚠️ Do **not** open the files by double-clicking (file://). Browsers block the camera models
+> from loading from local files; the apps must run from a local server.
 
-İkisi de sunucuyu başlatır ve uygulamayı **http://localhost:8015** adresinde açar.
+**Easiest — the launcher files** (each launcher first frees its own port, then starts the
+server and opens the browser):
 
-**Elle:**
+| App | Ubuntu/Linux | Windows | Address |
+|---|---|---|---|
+| Astronaut | `bash Baslat-Ubuntu.sh` | `Baslat-Windows.bat` | http://localhost:8020 |
+| Rater | `bash Baslat-Ubuntu.sh` | `Baslat-Windows.bat` | http://localhost:8016 |
+
+**Manually:**
 
 ```bash
 # Ubuntu / Linux
-cd helion-app && python3 -m http.server 8000
+cd helion-astronot && python3 -m http.server 8020
 
 # Windows
-cd helion-app && py -m http.server 8000
+cd helion-astronot && py -m http.server 8020
 ```
 
-Sonra tarayıcıda (Chrome/Chromium/Brave önerilir) `localhost:8015` adresine gidin.
-Sunucuyu durdurmak için terminali kapatmak yeterlidir. 8000 portu doluysa başka bir port
-kullanın (örn. `python3 -m http.server 8001` → `localhost:8001`).
+Then open the address in Chrome/Chromium. Closing the terminal stops the server.
 
-## Bölümler
+## The sections
 
-| Bölüm | Ne ölçer? | Nasıl? |
+| Section | What it measures | How |
 |---|---|---|
-| **Fiziksel Sağlık** | Hareket kabiliyeti, zorlanma | 9 hareket (5 el + 4 vücut); tekrar/açı/süre **kamerayla doğrulanır** (MediaPipe Pose + Hand Landmarker). Zorlanılan hareket işaretlenir. Skor = tamamlama − zorlanılan başına 5 |
-| **Hatırlama** | Bilişsel tazelik | Cümle ezber-tekrar testi + renk/şekil dizisini aynı sırayla işaretleme. Model: NASA **Cognition** bataryası |
-| **Sosyallik** | İletişim durumu | Partnerle görüntülü konuşma; partner 5 ölçütten puanlar (göz teması, akıcılık, anlama, katılım, genel iletişim). Skor = ortalama × 20 |
-| **Hassasiyet (Tepki)** | Dikkat / yorgunluk | Rastgele beliren noktaya tıklama süresi; 5 denemenin ortancası. Kalibrasyon: 350 ms → 100, 1200 ms → 0. Model: **PVT / Reaction Self-Test** |
-| **Rapor** | Toplam hazırlık | 4 skor + ağırlıklı toplam, en zayıf alana öneri, günlük göstergeler ve **eğilim grafiği** |
-| **Günlük Takip** *(ek)* | Günün göstergeleri | Su sayacı (bardak/ml), öğün işaretleme, uyku saati, ruh hali (1–5), Dünya'ya görev notu |
-| **Nefes Egzersizi** *(ek)* | Sakinleşme | Kutu nefesi 4-4-4-4 halka animasyonu; 1/2/3 dakika |
+| **Physical Health** | Mobility, strain | 9 movements (5 hand + 4 full-body); reps/angles/durations verified by the camera (MediaPipe Pose + Hand Landmarker). Strained movements are flagged. Score = completion − 5 per strained movement |
+| **Memory** | Cognitive freshness | Sentence learn-and-recall test + a colour/shape sequence repeated in the same order. Model: NASA Cognition battery |
+| **Social** | Communication state | Video call with a partner; the partner rates 5 criteria (eye contact, fluency, comprehension, engagement, overall communication). Score = average × 20 |
+| **Reaction (Sensitivity)** | Attention / fatigue | Click a randomly appearing dot; median of 5 trials. Calibration: 350 ms → 100, 1200 ms → 0. Model: PVT / Reaction Self-Test |
+| **Report** | Overall readiness | 4 scores + total (average), recommendation for the weakest area, daily indicators and the trend chart |
+| **Daily Tracking** (extra) | The day's indicators | Water counter (glasses/ml), meal check-offs, sleep hours, mood (1–5), mission note to Earth |
+| **Breathing Exercise** (extra) | Calming down | Box breathing 4-4-4-4 with a ring animation; 1/2/3 minutes |
 
-## Çevrimdışı Çalışma ve Kuyruk Sistemi
+## Two apps, on purpose
 
-HELION, bağlantının kopacağını varsayarak tasarlandı (güneş fırtınası senaryosu):
+- **`helion-astronot/`** — the astronaut app: all tests, the report, the extras. In the Social
+  section the astronaut **cannot rate themselves** — there are no rating controls; after the
+  call the app simply waits for the score.
+- **`helion-puanlayici/`** — the rater app: it only joins the call and rates.
 
-- Kamera modelleri ve tüm kod **uygulama klasörünün içindedir** (`vendor/`, `models/`) —
-  çalışma anında internetten hiçbir şey indirilmez.
-- Tamamlanan her kayıt **kuyruğa** yazılır (`helionQueue`): test skorları, günlük kayıtlar,
-  nefes oturumları, görev notları, çevrimdışı puanlar. Kuyruk, oturum sıfırlamalarından
-  etkilenmez.
-- Ana ekrandaki **⬇ Raporu İndir** düğmesi bütün veriyi tek JSON dosyası olarak verir —
-  bağlantı dönünce "Dünya'ya" gönderilecek dosya budur.
-- Rapordaki **eğilim grafiği** kuyruktaki kayıtlardan çizilir; bir skorun günler içindeki
-  düşüşü (örn. 82 → 74 → 58) kırmızı işaretlenir.
-- **Sosyallik çevrimdışı akışı:** Dünya'daki doktora ulaşılamıyorsa 2. astronot diğerini
-  **yüz yüze puanlar** ("📴 Çevrimdışı Puanlama" düğmesi); puan kuyruğa alınır. Ayrıca
-  **"📬 Dünya'ya Gönder"** paneli var: **Kendim Hakkında** — astronot üsse yazılı mesaj
-  yazar; **Başkası Hakkında** — önce kimin hakkında olduğu sorulur, sonra aynı 5 ölçütlük
-  puanlama anahtarı ve ek not alanı açılır. İkisi de kuyruğa girer, bağlantı kurulunca
-  Dünya'daki üsse gönderilir.
-- **Tek istisna:** canlı görüntülü görüşmenin iki cihazı buluşturan sinyal adımı herkese açık
-  bir MQTT sunucusu kullanır ve bağlantı ister. Aynı yerel ağda (örn. istasyon iç ağı) yerel
-  bir sinyal sunucusuyla bu adım da internetsiz çalışır; görüşmenin kendisi zaten cihazdan
-  cihazadır (WebRTC). Çevrimdışı alternatifler yukarıdadır.
+Self-rating would corrupt the measurement, so the score always comes from a second pair of
+eyes. The transfer is automatic and code-free: when the rater saves, the score travels over
+the call's data channel — which stays open after the call ends until the delivery completes.
+If the astronaut's page is closed, the score waits on the server as a retained message and
+drops in by itself when the page opens.
 
-## Veri Modeli (hepsi cihazda, localStorage)
+The astronaut app also has the **"📬 Send to Earth"** panel, which works without any call:
+*About Myself* — the astronaut writes a message to base; *About Someone Else* — rate a
+crewmate with the same 5-criteria key plus a note. Both go into the queue, not into anyone's
+own score.
 
-| Anahtar | İçerik |
+## Offline design and the queue system
+
+HELION is designed assuming the link will break (the solar-storm scenario):
+
+- The camera models and all code live inside the app folders (`vendor/`, `models/`) — nothing
+  is downloaded at runtime.
+- Every completed record is written to the **queue** (`helionQueue`): test scores, daily
+  records, breathing sessions, mission notes, messages and ratings. The queue is **not**
+  affected by session resets.
+- The **⬇ Download Report** button on the home screen exports everything as a single JSON
+  file — this is the file that "goes to Earth" when the link returns. **👁 Show Queue** lists
+  every queued record with its time.
+- The report's **trend chart** is drawn from the queue: one record per section per day, the
+  last 5 days; a falling score (e.g. 82 → 74 → 58) is marked red with a ↓.
+- **The one exception:** the signalling step that introduces the two devices for the live
+  video call uses a public MQTT broker and needs a connection. On a local network (e.g. the
+  station's own) the same step runs through a local signalling server with no internet; the
+  call itself is device-to-device (WebRTC) either way.
+
+## Data model (all on-device, localStorage)
+
+| Key | Content |
 |---|---|
-| `helionResults` | Bölüm skorları ve detayları (fiziksel / hatirlama / sosyallik / tepki) |
-| `helionDaily` | Günün günlük-takip kaydı (su, öğünler, uyku, ruh hali, not) |
-| `helionQueue` | Kuyruk: zaman damgalı tüm kayıtlar (test, gunluk, nefes, not, sosyallik-puan, mesaj-kendim, sosyallik-puan-baskasi) |
+| `helionResults` | Section scores and details (physical / memory / social / reaction) |
+| `helionDaily` | The day's daily-tracking record (water, meals, sleep, mood, note) |
+| `helionQueue` | The queue: all timestamped records (test, daily, breathing, note, social-rating, message-self, rating-about-other) |
 
-Veriler cihazdan dışarı yalnız kullanıcının indirdiği JSON dosyasıyla çıkar.
+Data leaves the device only in the JSON file the user downloads.
 
-## Klasör Yapısı
+## Repository structure
 
 ```
-helion-app/
-├── index.html                        Ana ekran (test kartları, ek araçlar, kuyruk, export)
-├── helion-fiziksel-bolum-v4.html     Bölüm 1 — Fiziksel (kamera doğrulamalı)
-├── helion-hatirlama-bolum.html       Bölüm 2 — Hatırlama
-├── helion-sosyallik-bolum.html       Bölüm 3 — Sosyallik (görüşme + puanlama + çevrimdışı)
-├── helion-sosyallik-puanlayici.html  Puanlayıcının ayrı sayfası
-├── helion-hassasiyet-bolum.html      Bölüm 4 — Tepki
-├── helion-rapor-bolum.html           Rapor (skorlar, öneri, eğilim)
-├── helion-gunluk-takip.html          Ek — Günlük Takip + Görev Notu
-├── helion-nefes.html                 Ek — Nefes Egzersizi
-├── vendor/                           MediaPipe kütüphanesi (yerel)
-│   └── wasm/                         MediaPipe WASM dosyaları (yerel)
-├── models/                           pose_landmarker_lite.task, hand_landmarker.task (yerel)
-├── Baslat-Ubuntu.sh                  Başlatıcı (Linux)
-├── Baslat-Windows.bat                Başlatıcı (Windows)
-└── README.md                         Bu dosya
+helion-astronaut-health-monitoring/
+├── README.md                  This file
+├── helion-astronot/           The astronaut app (port 8020)
+│   ├── index.html             Home screen (test cards, extras, queue, export)
+│   ├── helion-fiziksel-bolum.html    Section 1 — Physical (camera-verified)
+│   ├── helion-hatirlama-bolum.html   Section 2 — Memory
+│   ├── helion-sosyallik-bolum.html   Section 3 — Social (call + Send to Earth)
+│   ├── helion-hassasiyet-bolum.html  Section 4 — Reaction
+│   ├── helion-rapor-bolum.html       Report (scores, recommendation, trend)
+│   ├── helion-gunluk-takip.html      Extra — Daily Tracking + Mission Note
+│   ├── helion-nefes.html             Extra — Breathing Exercise
+│   ├── vendor/                MediaPipe library (local) + wasm/
+│   ├── models/                pose_landmarker_lite.task, hand_landmarker.task (local)
+│   ├── Baslat-Ubuntu.sh       Launcher (Linux)
+│   ├── Baslat-Windows.bat     Launcher (Windows)
+│   └── README.md              App notes (Turkish)
+└── helion-puanlayici/         The rater app (port 8016)
+    ├── index.html             Join call + rate (single page)
+    ├── Baslat-Ubuntu.sh
+    ├── Baslat-Windows.bat
+    └── README.md
 ```
 
-## Teknoloji
+## Technology
 
-Düz HTML/CSS/JavaScript — framework yok, derleme yok. MediaPipe Tasks Vision (Pose Landmarker
-Lite + Hand Landmarker) **yerel dosyalardan** çalışır. Sosyallik görüşmesi WebRTC ile
-cihazdan cihazadır; sinyal için elle yazılmış küçük bir MQTT istemcisi kullanılır
-(`wss://broker.emqx.io:8084/mqtt`), puan aktarımı otomatiktir ve kodsuzdur: görüşme bitse bile veri kanalı puan aktarılana kadar açık kalır, aktarım bitince kapanır; astronotun sayfası kapalıysa puan sunucuda bekler, sayfa açılınca kendiliğinden düşer.
+Plain HTML/CSS/JavaScript — no framework, no build step. MediaPipe Tasks Vision (Pose
+Landmarker Lite + Hand Landmarker) runs from local files. The Social call is WebRTC,
+device-to-device; a small hand-written MQTT client handles signalling
+(`wss://broker.emqx.io:8084/mqtt`) and the automatic, code-free score transfer described above.
 
-## NASA Kaynakları
+## NASA resources
 
-1. NASA Human Research Program — *The Human Body in Space* (RIDGE çerçevesi)
-   https://www.nasa.gov/humans-in-space/the-human-body-in-space
-2. NASA Cognition Test Battery (Basner ve ark., NASA HRP Task Book) — Hatırlama modeli
+1. NASA Human Research Program — **"5 Hazards of Human Spaceflight" / "The Human Body in
+   Space"** (RIDGE framework) — https://www.nasa.gov/humans-in-space/the-human-body-in-space
+2. NASA **Cognition** Test Battery (Basner et al., NASA HRP Task Book) — the Memory model —
    https://taskbook.nasaprs.com/tbp/tbpdf.cfm?id=356559081DB676F5B2C6B9D01BB07BBB
-3. Psychomotor Vigilance Test / Reaction Self-Test on ISS (Dinges, NASA HRP Task Book) — Tepki modeli
-   https://taskbook.nasaprs.com/tbp/tbpdf.cfm?id=1EC326EA683537F6CA5DCAA4F042DE02
+3. **Psychomotor Vigilance Test / Reaction Self-Test** on ISS (Dinges, NASA HRP Task Book) —
+   the Reaction model — https://taskbook.nasaprs.com/tbp/tbpdf.cfm?id=1EC326EA683537F6CA5DCAA4F042DE02
 
-## Sorun Giderme
+## Troubleshooting
 
-- **"Kamera modelleri yüklenemedi" bannerı:** Sayfayı `file://` ile açmışsınız. Başlatıcı
-  dosyasıyla / `localhost:8000` üzerinden açın.
-- **Kamera açılmıyor:** Tarayıcıda kamera iznini kontrol edin; sayfanın `localhost` üzerinden
-  açıldığından emin olun.
-- **"Hazırlanıyor…"da takıldı:** Sayfayı yenileyin; modeller bir kez yüklenince hızlanır.
-- **Sonuçlar eski görünüyor:** Uygulama her yeni tarayıcı oturumunda test sonuçlarını otomatik
-  sıfırlar (kuyruk kayıtları korunur). Ana ekrandaki "Sonuçları Sıfırla" da aynı işi yapar.
-- **Puan rapora düşmedi:** Puan, puanlayıcı kaydedince otomatik gider; astronotun Sosyallik
-  sayfasını açması yeterlidir (bekleyen puan sayfa açılınca düşer). İki cihazda da internet
-  olduğundan ve puanlamanın aynı oda üzerinden yapıldığından emin olun.
+- **"Camera models could not be loaded" banner:** you opened the page via file://. Open it
+  through the launcher / localhost instead.
+- **Camera does not open:** check the browser's camera permission; make sure the page is
+  served from localhost.
+- **Stuck on "Preparing…":** reload the page; once the models load once, it gets faster.
+- **Results look old:** the app resets test results automatically at every new browser
+  session (queue records are kept). The "Reset Results" button on the home screen does the
+  same.
+- **The score did not reach the report:** the score is sent automatically when the rater
+  saves; the astronaut only needs to open the Social page (a waiting score drops in when the
+  page opens). Make sure both devices are online and the rating was made in the same room.
 
-## Önemli Notlar
+## Important notes
 
-- HELION bir **öz-test ve hazırlık göstergesi** aracıdır; tıbbi tanı koymaz. Düşük skor bir
-  sağlık sorunu olduğu anlamına gelmez; düzenli tekrar ve eğilim takibi esastır.
-- **Super Intelligence (SI) beyanı:** Ekip, etkinlik boyunca yazılım geliştirme, tasarım ve
-  metin taslaklarında yapay zekâ yardımından (Muse) yararlanmıştır. Tüm tasarım kararları,
-  testler ve nihai içerik ekibe aittir; sistemin her parçasını ekip üyeleri anlatabilir.
-
-*Sürüm: final (v21 paketi) — 14 Kasım 2026, Ankara.*
+- HELION is a self-test and readiness-indicator tool; **it does not make medical diagnoses.**
+  A low score does not mean a health problem; regular repetition and trend tracking are the
+  point.
+- **Use of Super Intelligence (SI) declaration:** the team used AI assistance (Muse) during
+  the event for software development, design and draft texts. All design decisions, tests
+  and final content belong to the team, and every member can explain every part of the system.
+- Final version — Ankara, November 2026.
