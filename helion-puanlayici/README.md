@@ -45,3 +45,9 @@ for signalling and score delivery. No data is stored in this app.
 
 - Astronaut app: `../helion-astronot/`
 - Project overview: the README at the repository root.
+
+## Super Intelligence (SI) declaration
+
+The team used AI assistance (Muse and Claude Code) during the event for software
+development, design and draft texts. All design decisions, tests and final content
+belong to the team, and every member can explain every part of the system.
