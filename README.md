@@ -8,6 +8,9 @@ NASA Space Apps Challenge 2026 · Challenge: *Create Health Monitoring Software 
 on Space Missions*
 Team HELION: Arel Zafer Okuklu · Kerem Çanta · Ali Yiğit Ok (Ankara, in-person)
 
+**Try it live (no install):** https://lordecaii.github.io/helion-astronaut-health-monitoring/
+The astronaut app and the rater app are both linked from that page.
+
 ## What is HELION?
 
 HELION is a readiness test an astronaut on a long-duration mission runs on themselves every
