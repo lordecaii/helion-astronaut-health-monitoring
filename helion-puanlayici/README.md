@@ -1,10 +1,10 @@
-# HELION — Rater App
+# HELION: Rater App
 
-The companion app of **HELION — Astronaut Health Monitoring Software**
+The companion app of **HELION, Astronaut Health Monitoring Software**
 (NASA Space Apps Challenge 2026, Team HELION).
 
 This app has exactly one job: **join the social video call and rate the astronaut.**
-Nothing else lives here — no tests, no reports, no self-rating.
+Nothing else lives here, no tests, no reports, no self-rating.
 
 ## Why a separate app?
 
@@ -34,7 +34,7 @@ in the rater's hands.
 
 The launcher frees port 8016 first (in case an older server is still running), starts a
 local server and opens the browser. Use Chrome/Chromium with a camera. The app must be
-served over localhost — opening the HTML file directly (file://) will not work.
+served over localhost, opening the HTML file directly (file://) will not work.
 
 ## Tech
 
