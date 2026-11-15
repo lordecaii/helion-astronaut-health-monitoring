@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELION — Fiziksel Sağlık (Kamera Doğrulamalı)</title>
+<style>
+  :root{
+    --navy:#0b1f3a; --teal:#0096b2; --teal2:#35c4dc;
+    --text:#e8eef5; --muted:#9db4cc; --card:#122c50; --danger:#e0655f; --ok:#3fbf72;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--navy); color:var(--text); font-family:"Segoe UI",system-ui,-apple-system,sans-serif; min-height:100vh;}
+  header{display:flex; align-items:center; gap:14px; padding:16px 22px; border-bottom:2px solid var(--teal);}
+  header .logo{font-size:26px; font-weight:800; letter-spacing:3px;}
+  header .logo span{color:var(--teal2);}
+  header .sub{color:var(--muted); font-size:13px;}
+  header .fps{margin-left:auto; background:#0a1830; border:1px solid var(--teal); color:var(--teal2); font-weight:700; padding:5px 12px; border-radius:20px; font-size:13px;}
+  .progresswrap{height:8px; background:#0a1830;}
+  #progressbar{height:100%; width:0%; background:var(--teal2); transition:width .4s;}
+  main{max-width:820px; margin:0 auto; padding:24px 18px 60px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  h1{font-size:29px; margin-bottom:10px;}
+  p{color:var(--muted); line-height:1.55; margin-bottom:14px;}
+  .card{background:var(--card); border:1px solid #1d3f6e; border-radius:14px; padding:22px; margin-bottom:18px;}
+  .sentence{font-size:26px; line-height:1.5; color:#fff; text-align:center; padding:14px 6px;}
+  .tag{display:inline-block; background:var(--teal); color:#fff; font-size:12px; font-weight:700; padding:3px 10px; border-radius:20px; letter-spacing:1px; margin-bottom:10px;}
+  .tag.body{background:#5b5bd6;}
+  .movecount{text-align:center; color:var(--teal2); font-weight:700; letter-spacing:1px; margin-bottom:8px;}
+  .movename{font-size:32px; font-weight:800; text-align:center; margin-bottom:4px;}
+  .movehow{text-align:center; font-size:16px; color:var(--muted); margin-bottom:14px;}
+  .camwrap{position:relative; max-width:680px; margin:0 auto 14px; border-radius:14px; overflow:hidden; border:2px solid var(--teal); background:#000;}
+  .camwrap video{width:100%; display:block; transform:scaleX(-1);}
+  .camwrap canvas{position:absolute; inset:0; width:100%; height:100%; transform:scaleX(-1);}
+  .camstatus{position:absolute; left:10px; bottom:10px; background:rgba(6,17,34,.82); padding:6px 12px; border-radius:8px; font-size:14px; font-weight:600;}
+  .camdone{position:absolute; inset:0; display:none; align-items:center; justify-content:center; font-size:110px; background:rgba(10,40,20,.45);}
+  .movebar{height:14px; background:#0a1830; border-radius:8px; overflow:hidden; max-width:680px; margin:0 auto 8px;}
+  #movefill{height:100%; width:0%; background:var(--ok); transition:width .25s;}
+  .moveprog{text-align:center; font-size:18px; font-weight:700; margin-bottom:16px;}
+  .btn{display:inline-block; border:none; cursor:pointer; font-size:17px; font-weight:700; padding:14px 28px; border-radius:10px; background:var(--teal); color:#fff;}
+  .btn:hover{background:var(--teal2);}
+  .btn.secondary{background:transparent; border:2px solid #33517e; color:var(--muted);}
+  .btn.secondary:hover{border-color:var(--muted); color:var(--text);}
+  .btnrow{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:8px;}
+  .diffitem{display:flex; align-items:flex-start; gap:12px; background:var(--card); border:1px solid #1d3f6e; border-radius:10px; padding:12px 14px; margin-bottom:10px;}
+  .diffitem input[type=checkbox]{width:22px; height:22px; margin-top:2px; accent-color:var(--teal);}
+  .diffitem .dname{font-weight:700; font-size:16px;}
+  .diffitem .dnote{width:100%; margin-top:8px; display:none;}
+  .diffitem .dnote input{width:100%; padding:9px 12px; border-radius:8px; border:1px solid #33517e; background:#0a1830; color:var(--text); font-size:15px;}
+  .diffitem.checked{border-color:var(--danger);}
+  .scorebig{font-size:72px; font-weight:800; text-align:center; color:var(--teal2);}
+  .scorelabel{text-align:center; color:var(--muted); margin-bottom:16px;}
+  .scoreline{display:flex; justify-content:space-between; padding:8px 2px; border-bottom:1px solid #1d3f6e; font-size:16px;}
+  .warn{background:#3a2a12; border:1px solid #8a6d1f; color:#f2d38a; border-radius:10px; padding:12px 16px; font-size:14px; margin-bottom:16px; display:none;}
+  .err{background:#3a1414; border:1px solid #8a2f2f; color:#f2a9a9; border-radius:10px; padding:12px 16px; font-size:14px; margin-bottom:16px; display:none;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">HEL<span>ION</span></div>
+  <div class="sub">Bölüm 1 — Fiziksel Sağlık • Kamera Doğrulamalı</div>
+  <div class="fps" id="fpsBadge">FPS: —</div>
+</header>
+<div class="progresswrap"><div id="progressbar"></div></div>
+
+<main>
+  <!-- EKRAN 1: Başlangıç -->
+  <section class="screen active" id="scr-start">
+    <h1>Fiziksel Sağlık</h1>
+    <p>Sırayla <b style="color:var(--text)">9 hareket</b> yapacaksın (5 el + 4 vücut). Kamera eklemlerini izleyip tekrarları sayar; "yaptım" demen yetmez, hareketin görünmesi gerekir.</p>
+    <div class="btnrow"><button class="btn" id="btnStartMoves">▶ Kamerayı Aç ve Başla</button></div>
+  </section>
+
+  <!-- EKRAN 2: Hareketler (kamera doğrulamalı) -->
+  <section class="screen" id="scr-move">
+    <div class="movecount" id="moveCount">Hareket 1 / 10</div>
+    <div style="text-align:center"><span class="tag" id="moveTag">EL HAREKETİ</span></div>
+    <div class="movename" id="moveName">—</div>
+    <div class="movehow" id="moveHow">—</div>
+    <div class="err" id="camErr"></div>
+    <div class="camwrap" id="camWrap">
+      <video id="camVideo" autoplay playsinline muted></video>
+      <canvas id="camCanvas" width="1280" height="720"></canvas>
+      <div class="camstatus" id="camStatus">Kamera hazırlanıyor…</div>
+      <div class="camdone" id="camDone">✅</div>
+    </div>
+    <div class="movebar"><div id="movefill"></div></div>
+    <div class="moveprog" id="moveProg">—</div>
+    <div class="btnrow">
+      <button class="btn secondary" id="btnManual">Kamera algılayamıyor — Yaptım say</button>
+      <button class="btn secondary" id="btnSkip">Geç →</button>
+    </div>
+    <p style="text-align:center; margin-top:12px; font-size:13px;">El hareketlerinde elini kameraya göster; vücut hareketlerinde tüm vücudun kadraja girsin.</p>
+  </section>
+
+  <!-- EKRAN 3: Zorlanma işaretleme -->
+  <section class="screen" id="scr-diff">
+    <h1>Nasıl Geçti?</h1>
+    <p>Herhangi bir harekette <b style="color:var(--text)">zorlanma, ağrı veya sıkıntı</b> yaşadın mı? Yaşadıysan hareketi işaretle ve kısaca ne olduğunu yaz. Hiçbirinde sorun yoksa işaretlemeden devam et.</p>
+    <div class="warn" id="painWarn">⚠ İşaretlediğin hareketlerde ağrı/zorlanma belirttin. Bu bilgi raporuna işlenecek; ağrı şiddetliyse testi bırakıp dinlenmen önerilir.</div>
+    <div id="diffList"></div>
+    <div class="btnrow"><button class="btn" id="btnFinish">Bölümü Bitir →</button></div>
+  </section>
+
+  <!-- EKRAN 4: Skor -->
+  <section class="screen" id="scr-score">
+    <h1 style="text-align:center">Fiziksel Sağlık Tamamlandı</h1>
+    <div class="scorebig" id="scoreBig">0</div>
+    <div class="scorelabel">bölüm skoru (0–100)</div>
+    <div class="card">
+      <div class="scoreline"><span>Tamamlanan hareket</span><b id="scDone">—</b></div>
+      <div class="scoreline"><span>Tamamlama puanı</span><b id="scBase">—</b></div>
+      <div class="scoreline"><span>Zorlanılan hareket</span><b id="scDiff">—</b></div>
+      <div class="scoreline" style="border-bottom:none"><span>Zorlanma kesintisi</span><b id="scPenalty">—</b></div>
+    </div>
+    <p style="text-align:center">Skorun kaydedildi. Ana uygulamada bu ekran kapanır ve ana menüye dönülür.</p>
+    <div class="btnrow"><button class="btn" onclick="location.href='index.html'">⌂ Ana Ekrana Dön</button><button class="btn secondary" id="btnRestart">↺ Baştan Başla</button></div>
+  </section>
+</main>
+
+<script type="module">
+"use strict";
+/* =====================================================================
+   YEREL KULLANIM NOTU (salonda internetsiz sürüm için):
+   Bu önizleme dosyası MediaPipe kütüphanesini ve modelleri internetten
+   (CDN) yükler. Yarışma sürümünde şu 3 kaynağı indirip proje klasörüne
+   koyun ve aşağıdaki adresleri yerel yollarla değiştirin:
+   1) vision_bundle.mjs + wasm klasörü  (@mediapipe/tasks-vision)
+   2) pose_landmarker_lite.task
+   3) hand_landmarker.task
+   ===================================================================== */
+const VISION_BUNDLE = "./vendor/vision_bundle.mjs";
+const WASM_PATH     = "./vendor/wasm";
+const POSE_MODEL    = "./models/pose_landmarker_lite.task";
+const HAND_MODEL    = "./models/hand_landmarker.task";
+
+/* ============ DÜZENLENEBİLİR İÇERİK ============ */
+/* hedef: doğrulama hedefi (tekrar / tur / saniye). Demo akışı için
+   bilek çevirme 4 tur, denge her ayak 10 sn olarak ayarlandı. */
+const HAREKETLER = [
+  { tip:"el", ikon:"✋", ad:"Parmak Açma-Kapama", nasil:"Parmaklarını iyice aç, sonra yumruk yap.", hedef:10, birim:"tekrar", check:"acKapa" },
+  { tip:"el", ikon:"🔄", ad:"Bilek Çevirme",     nasil:"Bileğini yavaşça daire çizerek çevir.",        hedef:4,  birim:"tur",    check:"bilek" },
+  { tip:"el", ikon:"✊", ad:"Yumruk Sıkma",      nasil:"Yumruğunu sıkıca sık, biraz bekle, sonra aç.", hedef:5,  birim:"tekrar", check:"yumruk" },
+  { tip:"el", ikon:"👌", ad:"Parmak Dokundurma", nasil:"Başparmağını sırayla işaret, orta, yüzük ve serçe parmağına dokundur.", hedef:2, birim:"tur", check:"dokundur" },
+  { tip:"el", ikon:"🙏", ad:"Avuç Bastırma",     nasil:"İki avucunu kameraya dönük birleştir ve bastırarak bekle.", hedef:5, birim:"sn", check:"avuc" },
+  { tip:"vucut", ikon:"🧍", ad:"Boyun Esnetme",  nasil:"Başını yavaşça sağ omzuna eğ, bekle, ortaya dön; sonra sola.", hedef:3, birim:"her yana", check:"boyun" },
+  { tip:"vucut", ikon:"💪", ad:"Omuz Çevirme",   nasil:"Omuzlarınla büyük daireler çizerek çevir.",    hedef:2,  birim:"tur",    check:"omuz" },
+  { tip:"vucut", ikon:"🚶", ad:"Diz Çekme",      nasil:"Dizlerini sırayla yukarı çek. Her bacak eşit sayıda.", hedef:10, birim:"her bacak", check:"diz" },
+  { tip:"vucut", ikon:"🦩", ad:"Tek Ayak Denge", nasil:"Tek ayak üstünde dengede dur; süre dolunca diğer ayağa geç.", hedef:10, birim:"sn / ayak", check:"denge" }
+];
+
+/* ============ DURUM ============ */
+const $ = id => document.getElementById(id);
+let idx = 0;
+const yapilan = new Array(HAREKETLER.length).fill(false);
+const zorlanilan = new Array(HAREKETLER.length).fill(false);
+const notlar = new Array(HAREKETLER.length).fill("");
+let state = null;          // aktif hareketin doğrulama durumu
+let advancing = false;     // hareket geçiş kilidi (tekrar tetiklenmeyi önler)
+let manualMode = false;
+let modelsReady = false, modelsFailed = false;
+let poseLM = null, handLM = null, drawUtils = null, MP = null;
+let camStream = null, rafId = null, lastVideoTime = -1;
+let fpsFrames = 0, fpsLast = performance.now();
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+  const step = { "scr-start":5, "scr-move":10 + (idx / HAREKETLER.length) * 60, "scr-diff":80, "scr-score":100 }[id];
+  $("progressbar").style.width = step + "%";
+}
+
+/* ============ BAŞLANGIÇ ============ */
+$("btnStartMoves").addEventListener("click", async () => { renderMove(); await startCamera(); });
+
+/* ============ MEDIAPIPE KURULUM ============ */
+async function loadModels(){
+  try {
+    MP = await import(VISION_BUNDLE);
+    const fileset = await MP.FilesetResolver.forVisionTasks(WASM_PATH);
+    poseLM = await MP.PoseLandmarker.createFromOptions(fileset, {
+      baseOptions: { modelAssetPath: POSE_MODEL, delegate: "GPU" },
+      runningMode: "VIDEO", numPoses: 1
+    });
+    handLM = await MP.HandLandmarker.createFromOptions(fileset, {
+      baseOptions: { modelAssetPath: HAND_MODEL, delegate: "GPU" },
+      runningMode: "VIDEO", numHands: 2
+    });
+    const ctx = $("camCanvas").getContext("2d");
+    drawUtils = new MP.DrawingUtils(ctx);
+    modelsReady = true;
+    setStatus("Kamera hazır — hareketi yap, ben doğrulayacağım ✓");
+  } catch(e) {
+    modelsFailed = true; manualMode = true;
+    const er = $("camErr");
+    er.style.display = "block";
+    er.textContent = "⚠ Kamera modelleri yüklenemedi. Bu genelde sayfa dosyadan çift tıklayarak (file://) açıldığında olur — modeller güvenlik gereği yalnız yerel sunucudan yüklenir. Çözüm: bu klasördeki 'Baslat-Ubuntu' (Windows: 'Baslat-Windows') dosyasını çalıştır, uygulama localhost:8000 adresinde açılır. Şimdilik kamerasız moddasın: hareketleri yapıp 'Yaptım say' ile ilerleyebilirsin.";
+    setStatus("Kamerasız mod");
+  }
+}
+function setStatus(t){ $("camStatus").textContent = t; }
+
+async function startCamera(){
+  show("scr-move");
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 60 } }, audio: false
+    });
+    const vid = $("camVideo");
+    vid.srcObject = camStream;
+    try { await vid.play(); } catch(e) {}
+    setStatus("Modeller yükleniyor…");
+    loadModels();
+    rafId = requestAnimationFrame(loop);
+    // Bekçi: izin verildi ama 4 saniyede hiç kare gelmezse sorun genelde
+    // gömülü önizleme (iframe) içinde açılmasındandır — yönlendir.
+    setTimeout(() => {
+      if (camStream && !vid.videoWidth){
+        const er = $("camErr");
+        er.style.display = "block";
+        er.textContent = "⚠ Kamera izni verildi ama görüntü karesi gelmiyor. Bu genelde dosyayı bir önizleme penceresi içinde açınca olur. Çözüm: dosyayı indir, klasöründe 'python3 -m http.server 8000' çalıştır ve Chrome'da localhost:8000 adresinden dosyayı aç.";
+        setStatus("Görüntü gelmiyor — dosyayı localhost ile aç");
+      }
+    }, 4000);
+  } catch(e) {
+    manualMode = true;
+    const er = $("camErr");
+    er.style.display = "block";
+    er.textContent = "⚠ Kamera açılamadı (izin verilmedi ya da sayfa file:// ile açıldı — yerel sunucuyla açın: python3 -m http.server). Kamerasız moddasın.";
+    setStatus("Kamerasız mod");
+  }
+}
+function stopAll(){
+  if (rafId) cancelAnimationFrame(rafId);
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+}
+
+/* ============ GEOMETRİ YARDIMCILARI ============ */
+const D = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+const MID = (a,b) => ({ x:(a.x+b.x)/2, y:(a.y+b.y)/2 });
+function ANG(a,b,c){ // b köşesindeki açı (derece)
+  const v1 = { x:a.x-b.x, y:a.y-b.y }, v2 = { x:c.x-b.x, y:c.y-b.y };
+  const dot = v1.x*v2.x + v1.y*v2.y, m = Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y) || 1e-9;
+  return Math.acos(Math.max(-1, Math.min(1, dot/m))) * 180/Math.PI;
+}
+function handOpenness(lm){
+  const s = D(lm[0], lm[9]) || 1e-6;
+  return ([8,12,16,20].reduce((t,i)=> t + D(lm[i], lm[0]), 0) / 4) / s;
+}
+
+/* ============ DOĞRULAMA KURALLARI ============
+   Her kural: (sonuç, dt) -> {p:0..1 ilerleme, label, done}            */
+const CHECKS = {
+  acKapa(res, dt, S, H){
+    if (!res.landmarks?.length) return { p:S.rep/H.hedef, label:"Elini kameraya göster ✋" };
+    const o = handOpenness(res.landmarks[0]);
+    if (S.phase === "acik" && o < 1.30) S.phase = "kapali";
+    else if (S.phase === "kapali" && o > 1.85) { S.phase = "acik"; S.rep++; }
+    return { p:S.rep/H.hedef, label:"Tekrar: " + S.rep + " / " + H.hedef + (S.phase === "acik" ? " — şimdi yumruk yap ✊" : " — şimdi aç ✋"), done:S.rep >= H.hedef };
+  },
+  bilek(res, dt, S, H){
+    if (!res.landmarks?.length) return { p:0, label:"Elini kameraya göster ✋" };
+    const lm = res.landmarks[0];
+    const a = Math.atan2(lm[12].y - lm[0].y, lm[12].x - lm[0].x);
+    if (S.prev !== null){
+      let d = a - S.prev;
+      while (d >  Math.PI) d -= 2*Math.PI;
+      while (d < -Math.PI) d += 2*Math.PI;
+      S.acc += Math.abs(d);
+    }
+    S.prev = a;
+    const tur = S.acc / (2*Math.PI);
+    return { p:tur/H.hedef, label:"Tur: " + tur.toFixed(1) + " / " + H.hedef, done:tur >= H.hedef };
+  },
+  yumruk(res, dt, S, H){
+    if (!res.landmarks?.length) return { p:S.rep/H.hedef, label:"Elini kameraya göster ✋" };
+    const o = handOpenness(res.landmarks[0]);
+    if (S.armed && o < 1.30){ S.hold += dt; if (S.hold >= 0.8){ S.rep++; S.armed = false; S.hold = 0; } }
+    else if (!S.armed && o > 1.75) S.armed = true;
+    else if (S.armed && o >= 1.30) S.hold = 0;
+    return { p:S.rep/H.hedef, label:"Sıkma: " + S.rep + " / " + H.hedef + (S.armed ? " — yumruğunu sık ve bekle ✊" : " — elini aç ✋"), done:S.rep >= H.hedef };
+  },
+  dokundur(res, dt, S, H){
+    if (!res.landmarks?.length) return { p:0, label:"Elini kameraya göster ✋" };
+    const lm = res.landmarks[0], s = D(lm[0], lm[9]) || 1e-6;
+    const seq = [8,12,16,20], isim = ["işaret","orta","yüzük","serçe"];
+    if (D(lm[4], lm[seq[S.i]]) / s < 0.45){
+      S.i++;
+      if (S.i >= 4){ S.i = 0; S.tur++; }
+    }
+    const p = (S.tur + S.i/4) / H.hedef;
+    return { p, label:"Tur " + (S.tur+1) + " — başparmağını " + isim[S.i] + " parmağına dokundur 👌", done:S.tur >= H.hedef };
+  },
+  avuc(res, dt, S, H){
+    const ok = res.landmarks?.length >= 2 &&
+      D(res.landmarks[0][0], res.landmarks[1][0]) < 0.30 &&
+      res.landmarks[0][12].y < res.landmarks[0][0].y - 0.08 &&
+      res.landmarks[1][12].y < res.landmarks[1][0].y - 0.08;
+    if (ok) S.sn += dt; else S.sn = Math.max(0, S.sn - dt*2);
+    return { p:S.sn/H.hedef, label:"Basılı tut: " + S.sn.toFixed(1) + " / " + H.hedef + " sn 🙏", done:S.sn >= H.hedef };
+  },
+  boyun(res, dt, S, H){
+    if (!res.landmarks?.length) return { p:0, label:"Tüm vücudun kadraja girsin 🧍" };
+    const lm = res.landmarks[0], sc = MID(lm[11], lm[12]);
+    const tilt = (lm[0].x - sc.x) / (D(lm[11], lm[12]) || 1e-6);
+    // Kameraya dönükken: burun görüntüde sağa kayarsa baş SENİN soluna eğilmiştir
+    let side = tilt > 0.16 ? "sol" : (tilt < -0.16 ? "sag" : null);
+    if (side && S.armSide !== side){
+      if (S.holdSide === side) S.holdT += dt; else { S.holdSide = side; S.holdT = dt; }
+      if (S.holdT >= 0.4){ S[side]++; S.armSide = side; S.holdT = 0; S.holdSide = null; }
+    }
+    if (Math.abs(tilt) < 0.07){ S.armSide = null; S.holdSide = null; S.holdT = 0; }
+    const p = (Math.min(S.sag, H.hedef) + Math.min(S.sol, H.hedef)) / (2*H.hedef);
+    return { p, label:"Sağa: " + Math.min(S.sag,H.hedef) + "/" + H.hedef + " • Sola: " + Math.min(S.sol,H.hedef) + "/" + H.hedef, done:S.sag >= H.hedef && S.sol >= H.hedef };
+  },
+  omuz(res, dt, S, H){
+    if (!res.landmarks?.length) return { p:0, label:"Tüm vücudun kadraja girsin 🧍" };
+    const lm = res.landmarks[0], sc = MID(lm[11], lm[12]);
+    const px = S.sx === null ? lm[11].x : S.sx + (lm[11].x - S.sx) * 0.35;
+    const py = S.sy === null ? lm[11].y : S.sy + (lm[11].y - S.sy) * 0.35;
+    S.sx = px; S.sy = py;
+    const a = Math.atan2(py - sc.y, px - sc.x);
+    if (S.prev !== null){
+      let d = a - S.prev;
+      while (d >  Math.PI) d -= 2*Math.PI;
+      while (d < -Math.PI) d += 2*Math.PI;
+      S.acc += Math.abs(d);
+    }
+    S.prev = a;
+    const tur = S.acc / (2*Math.PI);
+    return { p:tur/H.hedef, label:"Tur: " + tur.toFixed(1) + " / " + H.hedef + " — omuzlarını çevirmeye devam et", done:tur >= H.hedef };
+  },
+  squat(res, dt, S, H){
+    if (!res.landmarks?.length) return { p:S.rep/H.hedef, label:"Tüm vücudun kadraja girsin 🧍" };
+    const lm = res.landmarks[0], sc = MID(lm[11], lm[12]), hc = MID(lm[23], lm[24]);
+    const torso = D(sc, hc) || 1e-6;
+    if (S.baseN < 45){ S.baseHipY = (S.baseHipY * S.baseN + hc.y) / (S.baseN + 1); S.baseN++; return { p:0, label:"Önce dik dur, seni tanıyayım… (" + Math.round(S.baseN/45*100) + "%)" }; }
+    const knee = (ANG(lm[23], lm[25], lm[27]) + ANG(lm[24], lm[26], lm[28])) / 2;
+    if (!S.down && hc.y > S.baseHipY + 0.20*torso && knee < 135) S.down = true;
+    else if (S.down && hc.y < S.baseHipY + 0.07*torso && knee > 155){ S.down = false; S.rep++; }
+    return { p:S.rep/H.hedef, label:"Squat: " + S.rep + " / " + H.hedef + (S.down ? " — şimdi kalk ⬆" : " — çömel ⬇"), done:S.rep >= H.hedef };
+  },
+  diz(res, dt, S, H){
+    if (!res.landmarks?.length) return { p:0, label:"Tüm vücudun kadraja girsin 🧍" };
+    const lm = res.landmarks[0], hc = MID(lm[23], lm[24]);
+    const legs = [
+      { hipA: ANG(lm[11], lm[23], lm[25]), knee: lm[25], key:"L" },
+      { hipA: ANG(lm[12], lm[24], lm[26]), knee: lm[26], key:"R" }
+    ];
+    for (const L of legs){
+      const up = L.hipA < 95 && L.knee.y < hc.y + 0.03;
+      if (up && !S["up" + L.key]){ S[L.key]++; S["up" + L.key] = true; }
+      if (!up) S["up" + L.key] = false;
+    }
+    const p = (Math.min(S.L, H.hedef) + Math.min(S.R, H.hedef)) / (2*H.hedef);
+    return { p, label:"Sol diz: " + Math.min(S.L,H.hedef) + "/" + H.hedef + " • Sağ diz: " + Math.min(S.R,H.hedef) + "/" + H.hedef, done:S.L >= H.hedef && S.R >= H.hedef };
+  },
+  denge(res, dt, S, H){
+    if (!res.landmarks?.length) return { p:0, label:"Tüm vücudun kadraja girsin 🧍" };
+    const lm = res.landmarks[0];
+    const solYukarda = lm[27].y < lm[28].y - 0.05;   // 27 = sol ayak bileği
+    const sagYukarda = lm[28].y < lm[27].y - 0.05;
+    if (solYukarda) S.sol += dt; else if (!sagYukarda) S.sol = Math.max(0, Math.min(S.sol, H.hedef));
+    if (sagYukarda) S.sag += dt;
+    const p = (Math.min(S.sol, H.hedef) + Math.min(S.sag, H.hedef)) / (2*H.hedef);
+    return { p, label:"Sol ayak havada: " + Math.min(S.sol,H.hedef).toFixed(0) + "/" + H.hedef + " sn • Sağ ayak havada: " + Math.min(S.sag,H.hedef).toFixed(0) + "/" + H.hedef + " sn", done:S.sol >= H.hedef && S.sag >= H.hedef };
+  }
+};
+function freshState(){
+  return { rep:0, tur:0, i:0, sn:0, acc:0, prev:null, phase:"acik", armed:true, hold:0,
+           sag:0, sol:0, armSide:null, holdT:0, holdSide:null, down:false,
+           baseHipY:0, baseN:0, L:0, R:0, upL:false, upR:false, sx:null, sy:null };
+}
+
+/* ============ ANA DÖNGÜ ============ */
+const canvas = $("camCanvas"), ctx = canvas.getContext("2d");
+function loop(){
+  rafId = requestAnimationFrame(loop);
+  const video = $("camVideo");
+  if (!video.videoWidth) return;
+  // FPS sayacı
+  fpsFrames++;
+  const now = performance.now();
+  if (now - fpsLast >= 1000){ $("fpsBadge").textContent = "FPS: " + fpsFrames; fpsFrames = 0; fpsLast = now; }
+  if (canvas.width !== video.videoWidth){ canvas.width = video.videoWidth; canvas.height = video.videoHeight; }
+  if (!modelsReady) return; // video zaten canlı görünüyor; iskelet, modeller hazır olunca çizilir
+  if (video.currentTime === lastVideoTime) return;
+  lastVideoTime = video.currentTime;
+  const H = HAREKETLER[idx];
+  if (!H) return;
+  const isHand = H.tip === "el";
+  let res = null;
+  try { res = isHand ? handLM.detectForVideo(video, now) : poseLM.detectForVideo(video, now); } catch(e) { return; }
+  // İskelet çizimi — şeffaf üst katmana; ayna görüntüsünü CSS veriyor
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (res?.landmarks?.length){
+    for (const lm of res.landmarks){
+      drawUtils.drawConnectors(lm, isHand ? MP.HandLandmarker.HAND_CONNECTIONS : MP.PoseLandmarker.POSE_CONNECTIONS, { color:"#35c4dc", lineWidth:3 });
+      drawUtils.drawLandmarks(lm, { color:"#ffd23f", radius:3 });
+    }
+  }
+  // Doğrulama (geçiş anında kilitliyken yeni kontrol yapma)
+  if (advancing) return;
+  if (!state) state = freshState();
+  const dt = Math.min(0.05, 1/30);
+  const out = CHECKS[H.check](res, dt, state, H);
+  $("movefill").style.width = Math.min(100, Math.round(out.p * 100)) + "%";
+  $("moveProg").textContent = H.ikon + " " + out.label;
+  setStatus(res?.landmarks?.length ? "Algılandı ✓ hareketi yap" : (isHand ? "El görünmüyor — elini kadraja sok" : "Vücut görünmüyor — biraz geri çekil"));
+  if (out.done) completeMove(true);
+}
+
+function renderMove(){
+  const H = HAREKETLER[idx];
+  state = freshState();
+  $("moveCount").textContent = "Hareket " + (idx + 1) + " / " + HAREKETLER.length;
+  const tag = $("moveTag");
+  tag.textContent = H.tip === "el" ? "EL HAREKETİ" : "TÜM VÜCUT HAREKETİ";
+  tag.classList.toggle("body", H.tip === "vucut");
+  $("moveName").textContent = H.ikon + " " + H.ad;
+  $("moveHow").textContent = H.nasil + "  (Hedef: " + H.hedef + " " + H.birim + ")";
+  $("movefill").style.width = "0%";
+  $("moveProg").textContent = "Hazırlanıyor…";
+  $("camDone").style.display = "none";
+  show("scr-move");
+}
+function completeMove(done){
+  if (advancing) return;   // kilit: bir tamamlanma sinyali yalnızca bir kez işlenir
+  advancing = true;
+  yapilan[idx] = done;
+  if (done) $("camDone").style.display = "flex";
+  setTimeout(() => {
+    idx++;
+    advancing = false;
+    if (idx < HAREKETLER.length) renderMove();
+    else { stopAll(); buildDiffList(); show("scr-diff"); }
+  }, done ? 900 : 150);
+}
+$("btnManual").addEventListener("click", () => completeMove(true));
+$("btnSkip").addEventListener("click", () => completeMove(false));
+
+/* ============ 3) ZORLANMA İŞARETLEME ============ */
+function buildDiffList(){
+  const wrap = $("diffList"); wrap.innerHTML = "";
+  HAREKETLER.forEach((h, i) => {
+    const div = document.createElement("div");
+    div.className = "diffitem";
+    div.innerHTML =
+      '<input type="checkbox" id="chk' + i + '">' +
+      '<div style="flex:1"><label class="dname" for="chk' + i + '">' + h.ikon + " " + h.ad +
+      (yapilan[i] ? "" : ' <span style="color:var(--muted); font-weight:400">(tamamlanmadı)</span>') + "</label>" +
+      '<div class="dnote" id="note' + i + '"><input type="text" placeholder="Sorun neydi? (örn. bileğim ağrıdı)" id="txt' + i + '"></div></div>';
+    wrap.appendChild(div);
+    div.querySelector("#chk" + i).addEventListener("change", ev => {
+      zorlanilan[i] = ev.target.checked;
+      div.classList.toggle("checked", ev.target.checked);
+      div.querySelector("#note" + i).style.display = ev.target.checked ? "block" : "none";
+      $("painWarn").style.display = zorlanilan.some(Boolean) ? "block" : "none";
+    });
+  });
+}
+
+/* ============ 4) SKOR ============ */
+$("btnFinish").addEventListener("click", () => {
+  HAREKETLER.forEach((h, i) => { const t = $("txt" + i); if (t) notlar[i] = t.value.trim(); });
+  const doneCount = yapilan.filter(Boolean).length;
+  const base = Math.round(doneCount / HAREKETLER.length * 100);
+  const diffCount = zorlanilan.filter(Boolean).length;
+  const penalty = diffCount * 5;
+  const score = Math.max(0, base - penalty);
+  try {
+    const r = JSON.parse(localStorage.getItem("helionResults") || "{}");
+    r.fiziksel = score;
+    r.fizikselDetay = { yapilan: doneCount, zorlanilan: diffCount, notlar: HAREKETLER.map((h,i)=> zorlanilan[i] ? { hareket: h.ad, not: notlar[i] } : null).filter(Boolean) };
+    localStorage.setItem("helionResults", JSON.stringify(r));
+  } catch(e) {}
+  $("scoreBig").textContent = score;
+  $("scDone").textContent = doneCount + " / " + HAREKETLER.length;
+  $("scBase").textContent = base;
+  $("scDiff").textContent = diffCount;
+  $("scPenalty").textContent = "−" + penalty;
+  show("scr-score");
+});
+$("btnRestart").addEventListener("click", () => location.reload());
+</script>
+<a href="index.html" title="Ana ekrana dön" style="position:fixed;left:14px;bottom:14px;z-index:999;background:#0096b2;color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.45)">⌂ Ana Ekran</a>
+</body>
+</html>

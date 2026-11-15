@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELION — Günlük Takip</title>
+<style>
+  :root{ --bg:#081426; --panel:#0e2138; --panel2:#122a47; --line:#1f3a5c; --text:#eaf2fa;
+         --muted:#93a9c0; --teal:#2eb7d3; --teal-d:#0e86a3; --gold:#e8b44a; --green:#3ecf7a; }
+  *{margin:0; padding:0; box-sizing:border-box;}
+  body{ font-family:"Segoe UI", system-ui, -apple-system, Arial, sans-serif; color:var(--text);
+        background:radial-gradient(1100px 550px at 70% -10%, #14304f 0%, var(--bg) 55%); min-height:100vh; }
+  header{ display:flex; align-items:center; gap:14px; padding:14px 22px; border-bottom:2px solid var(--teal-d);
+          background:rgba(10,24,42,.85); }
+  header .logo{ font-size:24px; font-weight:800; letter-spacing:3px; }
+  header .logo span{ color:var(--teal); }
+  header .sub{ color:var(--muted); font-size:14px; }
+  main{ max-width:880px; margin:0 auto; padding:26px 18px 60px; }
+  h1{ font-size:27px; margin-bottom:6px; }
+  .lead{ color:var(--muted); font-size:14.5px; line-height:1.55; margin-bottom:20px; }
+  .card{ background:linear-gradient(180deg, var(--panel2), var(--panel)); border:1px solid var(--line);
+         border-radius:16px; padding:20px 22px; margin-bottom:16px; }
+  .card h2{ font-size:18px; margin-bottom:4px; }
+  .card .hint{ color:var(--muted); font-size:13px; margin-bottom:14px; line-height:1.5; }
+  .su-row{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+  .su-big{ font-size:40px; font-weight:800; }
+  .su-big small{ font-size:16px; color:var(--muted); font-weight:600; }
+  .step-btn{ width:52px; height:52px; border-radius:50%; border:1px solid var(--line); cursor:pointer;
+             background:var(--panel); color:var(--text); font-size:26px; font-weight:700; }
+  .step-btn:hover{ border-color:var(--teal); color:var(--teal); }
+  .bar{ height:10px; background:#0a1a2e; border-radius:6px; overflow:hidden; margin-top:14px; }
+  .bar i{ display:block; height:100%; background:linear-gradient(90deg, var(--teal-d), var(--teal)); width:0%; transition:width .3s; }
+  .bar-note{ color:var(--muted); font-size:12px; margin-top:6px; }
+  .chips{ display:flex; gap:10px; flex-wrap:wrap; }
+  .chip{ padding:11px 18px; border-radius:999px; border:1px solid var(--line); background:var(--panel);
+         color:var(--text); font-size:15px; cursor:pointer; }
+  .chip.on{ background:var(--teal-d); border-color:var(--teal); font-weight:700; }
+  .note-in{ width:100%; margin-top:12px; padding:11px 13px; border-radius:10px; border:1px solid var(--line);
+            background:#0a1a2e; color:var(--text); font-size:14.5px; font-family:inherit; }
+  .uyku-row{ display:flex; align-items:center; gap:16px; }
+  .moods{ display:flex; gap:10px; }
+  .mood{ font-size:30px; background:var(--panel); border:1px solid var(--line); border-radius:12px;
+         width:56px; height:56px; cursor:pointer; filter:grayscale(.7); }
+  .mood.on{ filter:none; border-color:var(--gold); background:var(--panel2); }
+  .actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:6px; }
+  .btn{ padding:13px 26px; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer;
+        background:linear-gradient(180deg, var(--teal), var(--teal-d)); color:#fff; text-decoration:none; display:inline-block; }
+  .btn.ghost{ background:transparent; border:1px solid var(--line); color:var(--text); }
+  .ok{ color:var(--green); font-weight:700; font-size:15px; margin-top:12px; min-height:20px; }
+  .foot{ color:var(--muted); font-size:12.5px; text-align:center; margin-top:22px; line-height:1.6; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">HEL<span>ION</span></div>
+  <div class="sub">Ek Bölüm — Günlük Takip • Beslenme, Su, Uyku, Ruh Hali (skorsuz)</div>
+</header>
+<main>
+  <h1>Günlük Takip</h1>
+  <p class="lead">Testler anlık durumu ölçer; bu sayfa günün kendisini kaydeder. Görev metninde sayılan
+  göstergeler — su ve besin alımı, uyku süresi, ruh hali — burada tutulur ve günün raporuna eklenir.
+  Bağlantı olmasa da kayıt cihazda birikir.</p>
+
+  <div class="card">
+    <h2>💧 Su</h2>
+    <p class="hint">İçtiğin her bardak için +’ya bas (1 bardak ≈ 250 ml).</p>
+    <div class="su-row">
+      <button class="step-btn" id="suAzalt">−</button>
+      <div class="su-big"><span id="suBardak">0</span> <small>bardak •</small> <span id="suMl">0</span> <small>ml</small></div>
+      <button class="step-btn" id="suArttir">+</button>
+    </div>
+    <div class="bar"><i id="suBar"></i></div>
+    <div class="bar-note">Genel bilgilendirme hedefi: günde ~2.500 ml (kişiye ve göreve göre değişir; tıbbi öneri değildir).</div>
+  </div>
+
+  <div class="card">
+    <h2>🍽 Öğünler</h2>
+    <p class="hint">Yediğin öğünleri işaretle; istersen ne yediğini kısaca yaz.</p>
+    <div class="chips">
+      <button class="chip" data-ogun="kahvalti">Kahvaltı</button>
+      <button class="chip" data-ogun="ogle">Öğle</button>
+      <button class="chip" data-ogun="aksam">Akşam</button>
+      <button class="chip" data-ogun="ara">Ara öğün</button>
+    </div>
+    <input class="note-in" id="ogunNot" type="text" placeholder="Not (örn. protein ağırlıklı, iştah azdı)">
+  </div>
+
+  <div class="card">
+    <h2>🌙 Uyku</h2>
+    <p class="hint">Dün gece kaç saat uyudun?</p>
+    <div class="uyku-row">
+      <button class="step-btn" id="uykuAzalt">−</button>
+      <div class="su-big"><span id="uykuSaat">7.0</span> <small>saat</small></div>
+      <button class="step-btn" id="uykuArttir">+</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🙂 Ruh Hali</h2>
+    <p class="hint">Bugün kendini nasıl hissediyorsun?</p>
+    <div class="moods" id="moods">
+      <button class="mood" data-v="1">😞</button>
+      <button class="mood" data-v="2">🙁</button>
+      <button class="mood" data-v="3">😐</button>
+      <button class="mood" data-v="4">🙂</button>
+      <button class="mood" data-v="5">😄</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📨 Görev Notu — Dünya'ya</h2>
+    <p class="hint">Bağlantı yoksa notun kuyruğa yazılır; bağlantı dönünce raporla birlikte iletilir.</p>
+    <textarea class="note-in" id="gorevNot" rows="3" placeholder="Örn. Kaan'ın tepki skoru üç gündür düşüyor, dinlenme vardiyasına aldık. Diz zorlanması izleniyor."></textarea>
+    <div style="margin-top:10px"><button class="btn" id="btnNotKaydet" style="padding:10px 20px; font-size:14.5px">Notu Kuyruğa Ekle</button></div>
+    <div class="ok" id="notMsg"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="btnKaydet">Kaydet</button>
+    <a class="btn ghost" href="index.html">⌂ Ana Ekran</a>
+  </div>
+  <div class="ok" id="okMsg"></div>
+
+  <p class="foot">Bu kayıtlar tanı amaçlı değildir; günlük gösterge takibidir. Veriler yalnızca bu cihazda saklanır.</p>
+</main>
+<script>
+(function(){
+  var state = { su:0, ogunler:{}, uyku:7.0, ruhHali:0 };
+  try {
+    var old = JSON.parse(localStorage.getItem("helionDaily") || "null");
+    if (old && old.tarih === new Date().toDateString()) state = old.state || state;
+  } catch(e){}
+
+  var $ = function(id){ return document.getElementById(id); };
+  function render(){
+    $("suBardak").textContent = state.su;
+    $("suMl").textContent = state.su * 250;
+    $("suBar").style.width = Math.min(100, state.su * 250 / 2500 * 100) + "%";
+    $("uykuSaat").textContent = state.uyku.toFixed(1);
+    document.querySelectorAll(".chip").forEach(function(c){
+      c.classList.toggle("on", !!state.ogunler[c.dataset.ogun]);
+    });
+    document.querySelectorAll(".mood").forEach(function(m){
+      m.classList.toggle("on", +m.dataset.v === state.ruhHali);
+    });
+  }
+  $("suArttir").onclick = function(){ state.su++; render(); };
+  $("suAzalt").onclick = function(){ if (state.su > 0) state.su--; render(); };
+  $("uykuArttir").onclick = function(){ state.uyku = Math.min(14, state.uyku + 0.5); render(); };
+  $("uykuAzalt").onclick = function(){ state.uyku = Math.max(0, state.uyku - 0.5); render(); };
+  document.querySelectorAll(".chip").forEach(function(c){
+    c.onclick = function(){ state.ogunler[c.dataset.ogun] = !state.ogunler[c.dataset.ogun]; render(); };
+  });
+  document.querySelectorAll(".mood").forEach(function(m){
+    m.onclick = function(){ state.ruhHali = +m.dataset.v; render(); };
+  });
+  $("btnKaydet").onclick = function(){
+    var rec = { tarih: new Date().toDateString(), state: {
+      su: state.su, ogunler: state.ogunler, uyku: state.uyku, ruhHali: state.ruhHali,
+      not: $("ogunNot").value || "" } };
+    localStorage.setItem("helionDaily", JSON.stringify(rec));
+    // Kuyruk: bağlantı olmasa da kayıt kaybolmaz
+    var q = [];
+    try { q = JSON.parse(localStorage.getItem("helionQueue") || "[]"); } catch(e){}
+    q.push({ tip: "gunluk", zaman: new Date().toISOString(), veri: rec.state });
+    localStorage.setItem("helionQueue", JSON.stringify(q));
+    $("okMsg").textContent = "✓ Kaydedildi — kayıt kuyruğa da eklendi (çevrimdışı da saklanır).";
+  };
+  $("btnNotKaydet").onclick = function(){
+    var metin = $("gorevNot").value.trim();
+    if (!metin) { $("notMsg").textContent = "Önce bir not yaz."; return; }
+    var q = [];
+    try { q = JSON.parse(localStorage.getItem("helionQueue") || "[]"); } catch(e){}
+    q.push({ tip: "not", zaman: new Date().toISOString(), veri: { metin: metin } });
+    localStorage.setItem("helionQueue", JSON.stringify(q));
+    $("gorevNot").value = "";
+    $("notMsg").textContent = "✓ Not kuyruğa eklendi — bağlantı dönünce raporla birlikte gider.";
+  };
+  render();
+})();
+</script>
+</body>
+</html>

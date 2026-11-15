@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELION — Astronot Hazırlık Testi</title>
+<style>
+  :root{
+    --navy:#0b1f3a; --navy2:#0a1830; --teal:#0096b2; --teal2:#35c4dc;
+    --text:#e8eef5; --muted:#9db4cc; --card:#122c50; --line:#1d3f6e;
+    --ok:#3fbf72; --gold:#ffd23f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:radial-gradient(1200px 600px at 50% -80px, #14335e 0%, var(--navy) 55%); color:var(--text); font-family:"Segoe UI",system-ui,-apple-system,sans-serif; min-height:100vh;}
+  header{display:flex; align-items:center; gap:14px; padding:16px 22px; border-bottom:2px solid var(--teal);}
+  .logo{font-size:28px; font-weight:800; letter-spacing:3px;}
+  .logo span{color:var(--teal2);}
+  header .event{margin-left:auto; color:var(--muted); font-size:13px; text-align:right;}
+  main{max-width:880px; margin:0 auto; padding:30px 18px 50px;}
+  .hero{text-align:center; margin-bottom:26px;}
+  .hero h1{font-size:40px; font-weight:800; margin-bottom:8px;}
+  .hero h1 em{font-style:normal; color:var(--teal2);}
+  .hero .mission{color:var(--gold); font-size:13px; letter-spacing:1.5px; font-weight:700; text-transform:uppercase; margin-bottom:10px;}
+  .hero p{color:var(--muted); font-size:16.5px; line-height:1.55; max-width:640px; margin:0 auto;}
+  .hero p b{color:var(--text);}
+  /* RIDGE şeridi */
+  .ridge{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:22px 0 6px;}
+  .chip{border:1.5px solid #33517e; color:var(--muted); border-radius:22px; padding:6px 14px; font-size:13.5px; font-weight:600;}
+  .chip b{color:var(--text); margin-right:5px;}
+  .chip.hot{background:var(--teal); border-color:var(--teal); color:#fff;}
+  .chip.hot b{color:#fff;}
+  .ridgenote{text-align:center; color:var(--muted); font-size:13px; margin-bottom:24px;}
+  /* İlerleme */
+  .progcard{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 22px; margin-bottom:22px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;}
+  .progcard .ptitle{font-weight:800; font-size:17px;}
+  .progcard .psub{color:var(--muted); font-size:13.5px; margin-top:2px;}
+  .barwrap{flex:1; min-width:180px; height:14px; background:var(--navy2); border-radius:8px; overflow:hidden;}
+  #pfill{height:100%; width:0%; background:linear-gradient(90deg, var(--teal), var(--ok)); transition:width .5s;}
+  .total{text-align:center; min-width:110px;}
+  .total .tnum{font-size:40px; font-weight:800; color:var(--teal2); line-height:1;}
+  .total .tlab{color:var(--muted); font-size:12px; margin-top:3px;}
+  /* Kartlar */
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:640px){ .grid{grid-template-columns:1fr;} .hero h1{font-size:31px;} }
+  .card{background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:8px; text-decoration:none; color:var(--text); transition:border-color .2s, transform .15s;}
+  a.card:hover{border-color:var(--teal2); transform:translateY(-2px);}
+  .card .top{display:flex; align-items:center; gap:12px;}
+  .card .icon{font-size:34px;}
+  .card .no{color:var(--teal2); font-weight:800; font-size:13px; letter-spacing:1px;}
+  .card h2{font-size:21px; font-weight:800;}
+  .card .desc{color:var(--muted); font-size:14.5px; line-height:1.5; flex:1;}
+  .card .foot{display:flex; align-items:center; gap:10px; margin-top:6px;}
+  .badge{font-size:12.5px; font-weight:700; padding:4px 11px; border-radius:16px; background:#33517e; color:var(--muted);}
+  .badge.done{background:#14532d; color:#7ce3a1;}
+  .badge.next{background:var(--teal); color:#fff;}
+  .score{margin-left:auto; font-size:24px; font-weight:800; color:var(--teal2);}
+  .score small{font-size:13px; color:var(--muted); font-weight:600;}
+  .card.isnext{border-color:var(--teal); box-shadow:0 0 0 1px var(--teal), 0 8px 24px rgba(0,150,178,.18);}
+  .card.isdone{border-color:#1f5c38;}
+  .ridge-letter{margin-left:auto; width:30px; height:30px; border-radius:50%; border:1.5px solid #33517e; color:var(--muted); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex:none;}
+  .ridge-letter.hot{background:var(--teal); border-color:var(--teal); color:#fff;}
+  /* Rapor kartı */
+  .report{margin-top:14px; border-radius:14px; padding:22px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; text-decoration:none; color:var(--text); border:1.5px solid var(--line); background:linear-gradient(120deg, #122c50, #0e2a47);}
+  .report.ready{border-color:var(--gold); box-shadow:0 0 0 1px var(--gold), 0 10px 28px rgba(255,210,63,.12);}
+  .report.locked{opacity:.75;}
+  .report .ricon{font-size:40px;}
+  .report h2{font-size:23px; margin-bottom:3px;}
+  .report p{color:var(--muted); font-size:14.5px;}
+  .report .rbtn{margin-left:auto; background:var(--teal); color:#fff; font-weight:700; padding:12px 22px; border-radius:10px; font-size:15.5px;}
+  .report.ready .rbtn{background:var(--gold); color:#231a00;}
+  footer{margin-top:30px; text-align:center; color:var(--muted); font-size:13px; line-height:1.7;}
+  .extitle{margin:26px 0 10px; font-size:16px; font-weight:700;}
+  .extitle span{color:var(--muted); font-weight:400; font-size:13px;}
+  .exgrid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:640px){ .exgrid{grid-template-columns:1fr;} }
+  .excard{display:flex; gap:13px; align-items:center; background:var(--card);
+    border:1px dashed var(--line); border-radius:14px; padding:15px 17px; text-decoration:none; color:var(--text);}
+  .excard:hover{border-color:var(--teal2);}
+  .excard .exicon{font-size:26px;}
+  .excard h3{font-size:16px; margin-bottom:2px;}
+  .excard p{color:var(--muted); font-size:12.5px; line-height:1.45;}
+  .queuecard{margin-top:14px; display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;
+    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:15px 17px;}
+  .queuecard h3{font-size:15.5px; margin-bottom:3px;}
+  .queuecard p{color:var(--muted); font-size:12.5px; line-height:1.5; max-width:520px;}
+  .qbtns{display:flex; gap:9px;}
+  .qbtns button{padding:10px 16px; border-radius:10px; border:none; cursor:pointer; font-size:13.5px; font-weight:700;
+    background:var(--teal); color:#fff;}
+  .qbtns button.ghost{background:transparent; border:1px solid var(--line); color:var(--text); font-weight:400;}
+  footer .team{color:var(--text); font-weight:600;}
+  #btnReset{background:transparent; border:1.5px solid #33517e; color:var(--muted); padding:8px 16px; border-radius:9px; cursor:pointer; font-size:13.5px; font-weight:600; margin-bottom:12px;}
+  #btnReset:hover{border-color:#e0655f; color:#f2a9a9;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">HEL<span>ION</span></div>
+  <div class="event">NASA Space Apps Challenge 2026<br>Ankara • ODTÜ Eğitim Fakültesi</div>
+</header>
+
+<main>
+  <div id="fileUyari" style="display:none; background:#5a1f1f; border:1px solid #e05252; color:#ffd9d9; border-radius:12px; padding:12px 16px; margin-bottom:16px; font-size:14px; line-height:1.55">⚠ Uygulamayı dosyadan açtın. Fiziksel bölümün kamera modelleri güvenlik gereği yalnız yerel sunucudan yüklenir. Klasördeki <b>Baslat-Ubuntu</b> (Windows: <b>Baslat-Windows</b>) dosyasını çalıştır; uygulama <b>localhost:8000</b> adresinde sorunsuz açılır.</div>
+  <div class="hero">
+    <div class="mission">Create Health Monitoring Software for Astronauts on Space Missions</div>
+    <h1>Göreve <em>Hazır</em> mısın?</h1>
+    <p>Astronotun fiziksel, zihinsel ve sosyal hazırlığını ölçen aktif bir öz-test bataryası — <b>sadece laptop kamerasıyla</b>, ek sensör olmadan. <b>Test et. Bil. Hazır ol.</b></p>
+    <div class="ridge">
+      <span class="chip"><b>R</b>Radyasyon</span>
+      <span class="chip hot"><b>I</b>İzolasyon</span>
+      <span class="chip hot"><b>D</b>Uzaklık</span>
+      <span class="chip"><b>G</b>Yerçekimi</span>
+      <span class="chip"><b>E</b>Kapalı Ortam</span>
+    </div>
+    <div class="ridgenote">NASA’nın RIDGE tehlike çerçevesi — HELION özellikle <b style="color:var(--text)">I</b> ve <b style="color:var(--text)">D</b>’ye cevap verir; <b style="color:var(--text)">G</b> ve <b style="color:var(--text)">E</b> etkilerini izler.</div>
+  </div>
+
+  <div class="progcard">
+    <div>
+      <div class="ptitle" id="pTitle">Hazırlık Testleri</div>
+      <div class="psub" id="pSub">4 testi sırayla tamamla, raporun otomatik oluşsun.</div>
+    </div>
+    <div class="barwrap"><div id="pfill"></div></div>
+    <div class="total" id="totalBox" style="display:none">
+      <div class="tnum" id="tNum">—</div>
+      <div class="tlab">toplam hazırlık skoru</div>
+    </div>
+  </div>
+
+  <div class="grid" id="cards"></div>
+
+  <a class="report locked" id="reportCard" href="helion-rapor-bolum.html">
+    <div class="ricon">📋</div>
+    <div>
+      <h2>Hazırlık Raporu</h2>
+      <p id="reportText">4 test tamamlanınca raporun burada açılır: toplam skor, zayıf yönün ve önerin.</p>
+    </div>
+    <div class="rbtn" id="reportBtn">🔒 Kilitli</div>
+  </a>
+
+  <div class="extitle">Ek Araçlar <span>— skorsuz, gün boyu kullanım</span></div>
+  <div class="exgrid">
+    <a class="excard" href="helion-gunluk-takip.html">
+      <div class="exicon">📅</div>
+      <div><h3>Günlük Takip</h3><p>Su, öğünler, uyku ve ruh hali — günün göstergeleri</p></div>
+    </a>
+    <a class="excard" href="helion-nefes.html">
+      <div class="exicon">🫁</div>
+      <div><h3>Nefes Egzersizi</h3><p>Kutu nefesi (4-4-4-4) — sakinleşme ve odak</p></div>
+    </a>
+  </div>
+
+  <div class="queuecard">
+    <div class="qinfo">
+      <h3>📥 Çevrimdışı Kuyruk</h3>
+      <p id="qText">Kayıtlar bağlantı olmasa da cihazda birikir; bağlantı dönünce rapor olarak çıkarılabilir.</p>
+    </div>
+    <div class="qbtns">
+      <button id="btnExport">⬇ Raporu İndir</button>
+      <button id="btnQShow" class="ghost">👁 Kuyruğu Göster</button>
+      <button id="btnQClear" class="ghost">Kuyruğu Temizle</button>
+    </div>
+    <div id="qList" style="display:none; width:100%; margin-top:12px"></div>
+  </div>
+
+  <footer>
+    <button id="btnReset">🗑 Sonuçları Sıfırla</button>
+    <div class="team">Team HELION — Arel Zafer Okuklu • Kerem Çanta • Ali Yiğit Ok</div>
+    <div>Bu uygulama bir öz-test aracıdır; tıbbi tanı koymaz. Veriler yalnızca bu cihazda saklanır.</div>
+    <div>Kaynaklar: NASA HRP — “The Human Body in Space” (RIDGE) • NASA Cognition bataryası (Basner) • Reaction Self-Test / PVT (Dinges)</div>
+  </footer>
+</main>
+
+<script>
+"use strict";
+if (location.protocol === "file:") { var fu = document.getElementById("fileUyari"); if (fu) fu.style.display = ""; }
+var BOLUMLER = [
+  { anahtar:"fiziksel",  no:1, ikon:"💪", ad:"Fiziksel Sağlık",    dosya:"helion-fiziksel-bolum-v4.html", harf:"G", sicak:false,
+    desc:"Kamera ile doğrulanan 9 hareket: 5 el + 4 tüm vücut. Zorlandığın hareketleri de işaretlersin." },
+  { anahtar:"hatirlama", no:2, ikon:"🧠", ad:"Hatırlama",          dosya:"helion-hatirlama-bolum.html",     harf:"I", sicak:true,
+    desc:"Günün cümlesini ertesi gün hatırla (demo: hızlı atlama) ve renk/şekil dizisini aynı sırayla tekrarla." },
+  { anahtar:"sosyallik", no:3, ikon:"💬", ad:"Sosyallik",          dosya:"helion-sosyallik-bolum.html",     harf:"I", sicak:true,
+    desc:"Çift taraflı bölüm: bir puanlayıcı seninle görüntülü konuşur ve sohbeti 5 ölçüte göre puanlar." },
+  { anahtar:"tepki",     no:4, ikon:"⚡", ad:"Hassasiyet (Tepki)", dosya:"helion-hassasiyet-bolum.html",    harf:"E", sicak:false,
+    desc:"Rastgele anda beliren noktaya en hızlı tıkla. 5 denemede ortanca tepki süren ölçülür." }
+];
+
+function sonuclariOku(){
+  try { return JSON.parse(localStorage.getItem("helionResults") || "{}"); } catch(e){ return {}; }
+}
+
+function render(){
+  var r = sonuclariOku();
+  var biten = BOLUMLER.filter(function(b){ return typeof r[b.anahtar] === "number"; });
+  var sira = BOLUMLER.find(function(b){ return typeof r[b.anahtar] !== "number"; });
+
+  // İlerleme
+  document.getElementById("pfill").style.width = (biten.length / BOLUMLER.length * 100) + "%";
+  document.getElementById("pTitle").textContent = "Hazırlık Testleri — " + biten.length + " / " + BOLUMLER.length + " tamamlandı";
+  document.getElementById("pSub").textContent = biten.length === BOLUMLER.length
+    ? "Hepsi tamam! Raporun hazır, aşağıdan açabilirsin."
+    : "Sıradaki: " + (sira ? sira.ad : "—");
+
+  // Toplam skor
+  var totalBox = document.getElementById("totalBox");
+  if (biten.length === BOLUMLER.length){
+    var ort = Math.round(BOLUMLER.reduce(function(t,b){ return t + r[b.anahtar]; }, 0) / BOLUMLER.length);
+    document.getElementById("tNum").textContent = ort;
+    totalBox.style.display = "block";
+  } else totalBox.style.display = "none";
+
+  // Kartlar
+  var wrap = document.getElementById("cards");
+  wrap.innerHTML = "";
+  BOLUMLER.forEach(function(b){
+    var skor = r[b.anahtar];
+    var done = typeof skor === "number";
+    var a = document.createElement("a");
+    a.className = "card" + (done ? " isdone" : (sira && sira.anahtar === b.anahtar ? " isnext" : ""));
+    a.href = b.dosya;
+    a.innerHTML =
+      '<div class="top"><div class="icon">' + b.ikon + '</div>' +
+      '<div><div class="no">BÖLÜM ' + b.no + '</div><h2>' + b.ad + '</h2></div>' +
+      '<div class="ridge-letter' + (b.sicak ? " hot" : "") + '" title="RIDGE: ' + b.harf + '">' + b.harf + '</div></div>' +
+      '<div class="desc">' + b.desc + '</div>' +
+      '<div class="foot">' +
+        (done ? '<span class="badge done">✓ Tamamlandı</span>'
+              : (sira && sira.anahtar === b.anahtar ? '<span class="badge next">▶ Sıradaki</span>' : '<span class="badge">Bekliyor</span>')) +
+        (done ? '<span class="score">' + skor + '<small> / 100</small></span>' : '') +
+      '</div>';
+    wrap.appendChild(a);
+  });
+
+  // Rapor kartı
+  var rc = document.getElementById("reportCard");
+  var eksik = BOLUMLER.filter(function(b){ return typeof r[b.anahtar] !== "number"; }).map(function(b){ return b.ad; });
+  if (eksik.length === 0){
+    rc.className = "report ready";
+    rc.href = "helion-rapor-bolum.html";
+    document.getElementById("reportText").textContent = "Tüm testler tamamlandı. Toplam skorunu, zayıf yönünü ve önerini görmek için raporu aç.";
+    document.getElementById("reportBtn").textContent = "Raporu Aç →";
+  } else {
+    rc.className = "report locked";
+    rc.href = "#";
+    document.getElementById("reportText").textContent = "Rapor için eksik bölümler: " + eksik.join(", ") + ".";
+    document.getElementById("reportBtn").textContent = "🔒 Kilitli";
+  }
+}
+
+document.getElementById("reportCard").addEventListener("click", function(e){
+  if (this.classList.contains("locked")){
+    e.preventDefault();
+    var btn = document.getElementById("reportBtn");
+    btn.textContent = "Önce testleri bitir ☝";
+    setTimeout(render, 1400);
+  }
+});
+
+document.getElementById("btnReset").addEventListener("click", function(){
+  if (confirm("Tüm test sonuçları ve günün cümlesi silinsin mi?")){
+    localStorage.removeItem("helionResults");
+    localStorage.removeItem("helionSentence");
+    render();
+  }
+});
+
+// Açılışta temiz başlangıç: uygulama yeni bir tarayıcı oturumunda açıldıysa
+// önceki sonuçları sıfırla (her demo sıfırdan başlasın diye).
+// Aynı oturum içinde bölümler arası geçişte sonuçlar korunur.
+try {
+  if (!sessionStorage.getItem("helionOturum")) {
+    localStorage.removeItem("helionResults");
+    localStorage.removeItem("helionSentence");
+    sessionStorage.setItem("helionOturum", "1");
+  }
+} catch(e) {}
+
+// ---------- Çevrimdışı kuyruk ----------
+// Tamamlanan her bölüm sonucu kuyruğa da yazılır; kuyruk oturum sıfırlamasından
+// etkilenmez. Bağlantı yokken kayıtlar birikir, sonra rapor olarak indirilebilir.
+function getQueue(){ try { return JSON.parse(localStorage.getItem("helionQueue") || "[]"); } catch(e){ return []; } }
+function setQueue(q){ localStorage.setItem("helionQueue", JSON.stringify(q)); }
+function syncQueue(){
+  var R = sonuclariOku(), gun = new Date().toDateString(), q = getQueue(), degisti = false;
+  Object.keys(R).forEach(function(k){
+    var varMi = q.some(function(e){ return e.tip === "test" && e.bolum === k && e.gun === gun; });
+    if (!varMi){ q.push({ tip:"test", bolum:k, skor:R[k], gun:gun, zaman:new Date().toISOString() }); degisti = true; }
+  });
+  if (degisti) setQueue(q);
+}
+function renderQueue(){
+  var n = getQueue().length, el = document.getElementById("qText");
+  if (el) el.textContent = n > 0
+    ? "Kuyrukta " + n + " kayıt var — bağlantı olmasa da cihazda saklanır; bağlantı dönünce rapor olarak çıkarılabilir."
+    : "Kayıtlar bağlantı olmasa da cihazda birikir; bağlantı dönünce rapor olarak çıkarılabilir.";
+  renderQueueList();
+}
+var BOLUM_AD = { fiziksel:"Fiziksel", hatirlama:"Hatırlama", sosyallik:"Sosyallik", tepki:"Tepki" };
+function qEsc(t){ return String(t == null ? "" : t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function qSatir(e){
+  var v = e.veri || {}, ana = "", detay = "";
+  function kisalt(t, n){ t = String(t || ""); return t.length > n ? t.slice(0, n) + "…" : t; }
+  if (e.tip === "test"){ ana = "🧪 Test — " + (BOLUM_AD[e.bolum] || e.bolum); detay = e.skor + " / 100"; }
+  else if (e.tip === "mesaj-kendim"){ ana = "🙋 Kendim hakkında mesaj"; detay = "\u201C" + kisalt(v.mesaj, 90) + "\u201D"; }
+  else if (e.tip === "sosyallik-puan-baskasi"){ ana = "👥 " + qEsc(v.kisi || "?") + " hakkında değerlendirme"; detay = v.skor + " / 100" + (v.not ? " — \u201C" + kisalt(v.not, 60) + "\u201D" : ""); }
+  else if (e.tip === "sosyallik-puan"){ ana = "🤝 Yüz yüze sosyallik puanı"; detay = (v.skor != null ? v.skor + " / 100" : ""); }
+  else if (e.tip === "not"){ ana = "📝 Görev notu — Dünya'ya"; detay = "\u201C" + kisalt(v.metin, 90) + "\u201D"; }
+  else if (e.tip === "gunluk"){ ana = "📅 Günlük takip"; var p = []; if (v.su != null) p.push("su " + v.su + " bardak"); if (v.uyku != null) p.push("uyku " + v.uyku + " sa"); if (v.ruhHali) p.push("ruh hali " + v.ruhHali + "/5"); detay = p.join(" • "); }
+  else if (e.tip === "nefes"){ ana = "🌬️ Nefes egzersizi"; detay = (v.tur || "?") + " tur" + (v.sureSn ? " • " + v.sureSn + " sn" : ""); }
+  else { ana = "• " + qEsc(e.tip); }
+  var saat = "";
+  try { saat = new Date(e.zaman).toLocaleString("tr-TR", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" }); } catch(err) {}
+  return '<div style="display:flex; gap:10px; align-items:baseline; padding:8px 12px; border:1px solid #1d3a5f; border-radius:10px; margin-bottom:6px; background:#0a1830">' +
+    '<div style="flex:1"><b style="color:#e8eef5">' + ana + '</b>' +
+    (detay ? '<div style="color:#9db4cc; font-size:13.5px; margin-top:2px">' + qEsc(detay) + '</div>' : '') +
+    '</div>' +
+    '<div style="color:#5f7ea6; font-size:12.5px; white-space:nowrap">' + saat + '</div></div>';
+}
+function renderQueueList(){
+  var box = document.getElementById("qList");
+  if (!box || box.style.display === "none") return;
+  var q = getQueue();
+  box.innerHTML = q.length === 0
+    ? '<div style="color:#9db4cc; padding:8px 4px">Kuyruk boş — biriken kayıtlar burada listelenir.</div>'
+    : '<div style="color:#9db4cc; font-size:13px; margin-bottom:8px">Veriler bu cihazda, kuyrukta birikir — bağlantı dönünce rapor olarak üsse gider:</div>' +
+      q.slice().reverse().map(qSatir).join("");
+}
+document.getElementById("btnQShow").addEventListener("click", function(){
+  var box = document.getElementById("qList");
+  var acik = box.style.display !== "none";
+  box.style.display = acik ? "none" : "block";
+  this.textContent = acik ? "👁 Kuyruğu Göster" : "🙈 Kuyruğu Gizle";
+  renderQueueList();
+});
+
+document.getElementById("btnExport").addEventListener("click", function(){
+  var veri = { uygulama:"HELION", tarih:new Date().toISOString(),
+               sonuclar: sonuclariOku(),
+               gunluk: (function(){ try { return JSON.parse(localStorage.getItem("helionDaily") || "null"); } catch(e){ return null; } })(),
+               kuyruk: getQueue() };
+  var blob = new Blob([JSON.stringify(veri, null, 2)], { type:"application/json" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "helion-rapor.json"; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+});
+document.getElementById("btnQClear").addEventListener("click", function(){
+  if (confirm("Kuyruktaki tüm kayıtlar silinsin mi? (Test sonuçları silinmez)")){
+    localStorage.removeItem("helionQueue"); renderQueue();
+  }
+});
+
+// Sekmeye geri dönüldüğünde / sayfa geri önbellekten geldiğinde tazele
+window.addEventListener("pageshow", function(){ render(); syncQueue(); renderQueue(); });
+window.addEventListener("focus", render);
+syncQueue();
+renderQueue();
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HELION — Hatırlama Testi</title>
+  <style>
+/* HELION — koyu lacivert uzay teması */
+:root {
+  --zemin: #070d1f;
+  --panel: #0f1a36;
+  --panel-acik: #16244a;
+  --cizgi: #263663;
+  --yazi: #e6ecff;
+  --soluk: #8fa0cc;
+  --vurgu: #4cc9f0;
+  --iyi: #5ee6a8;
+  --uyari: #ff6b6b;
+  --sari: #ffd166;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at top, #12204a 0%, var(--zemin) 60%);
+  color: var(--yazi);
+  font-family: "Segoe UI", Ubuntu, "DejaVu Sans", Arial, sans-serif;
+  line-height: 1.5;
+}
+
+.ust-bar { padding: 20px 32px; border-bottom: 1px solid var(--cizgi); }
+.ust-bar h1 { margin: 0; letter-spacing: 6px; color: var(--vurgu); font-size: 26px; }
+.ust-bar p { margin: 2px 0 0; color: var(--soluk); font-size: 14px; }
+
+main { max-width: 960px; margin: 0 auto; padding: 24px 20px 48px; }
+h2 { margin: 8px 0 12px; }
+h3 { margin: 0 0 8px; font-size: 16px; color: var(--soluk); }
+
+.ekran { display: none; }
+.ekran.aktif { display: block; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+
+.birincil {
+  background: var(--vurgu);
+  color: #04122b;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 28px;
+}
+.birincil:disabled { opacity: .4; cursor: default; }
+.ikincil {
+  background: none;
+  border: 1px solid var(--vurgu);
+  color: var(--vurgu);
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 10px 28px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--cizgi);
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-top: 16px;
+}
+.soluk { color: var(--soluk); font-size: 14px; }
+.ust-satir { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.sayac { font-size: 12px; letter-spacing: 2px; color: var(--soluk); text-transform: uppercase; }
+.adimlar { display: flex; gap: 8px; }
+.adimlar span {
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--cizgi);
+  border-radius: 999px;
+  color: var(--soluk);
+}
+.adimlar span.aktif { color: var(--vurgu); border-color: var(--vurgu); }
+.adimlar span.tamam { color: var(--iyi); border-color: var(--iyi); }
+
+.alt-butonlar { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+
+/* Cümle testi */
+.hat-sahne {
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.hat-sahne.cumle { font-size: 26px; font-weight: 600; line-height: 1.5; max-width: 720px; margin: 0 auto; }
+
+.cumle-girdi {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  margin: 8px auto 0;
+  min-height: 90px;
+  padding: 12px 14px;
+  font: inherit;
+  font-size: 18px;
+  color: var(--yazi);
+  background: var(--panel-acik);
+  border: 1px solid var(--cizgi);
+  border-radius: 8px;
+  outline: none;
+  resize: vertical;
+}
+.cumle-girdi:focus { border-color: var(--vurgu); }
+.cumle-girdi + .cumle-girdi { margin-top: 12px; }
+.ezber-cumle { font-size: 24px; font-weight: 600; text-align: center; margin: 18px auto; max-width: 720px; }
+.ezber-cumle small { display: block; font-size: 12px; letter-spacing: 2px; color: var(--soluk); font-weight: 400; }
+
+.kelimeler { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 10px 0; }
+.kelimeler span { padding: 3px 10px; border-radius: 6px; font-size: 15px; }
+.kelimeler .dogru { background: rgba(94, 230, 168, .15); color: var(--iyi); }
+.kelimeler .yanlis { background: rgba(255, 107, 107, .15); color: var(--uyari); text-decoration: line-through; }
+
+/* Dizi testi */
+.dizi-sahne {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-acik);
+  border-radius: 12px;
+  margin: 12px 0;
+}
+.dizi-sahne svg { width: 120px; height: 120px; }
+.dizi-mesaj { text-align: center; min-height: 1.5em; color: var(--soluk); margin: 0 0 12px; }
+.dizi-mesaj.iyi { color: var(--iyi); font-weight: 600; }
+.dizi-mesaj.uyari { color: var(--uyari); font-weight: 600; }
+
+.dizi-yuvalar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; min-height: 48px; margin-bottom: 14px; }
+.dizi-yuva {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px dashed var(--cizgi);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dizi-yuva svg { width: 30px; height: 30px; }
+.dizi-yuva.dogru { border: 2px solid var(--iyi); }
+.dizi-yuva.yanlis { border: 2px solid var(--uyari); }
+
+.dizi-tuslar {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+@media (max-width: 600px) { .dizi-tuslar { grid-template-columns: repeat(3, 1fr); } }
+.dizi-tuslar button {
+  aspect-ratio: 1;
+  background: var(--panel-acik);
+  border: 1px solid var(--cizgi);
+  border-radius: 10px;
+  padding: 10px;
+  transition: border-color .1s, transform .1s;
+}
+.dizi-tuslar button:hover:not(:disabled) { border-color: var(--vurgu); }
+.dizi-tuslar button:active:not(:disabled) { transform: scale(.94); }
+.dizi-tuslar button:disabled { opacity: .35; cursor: default; }
+.dizi-tuslar svg { width: 100%; height: 100%; }
+
+/* Sonuç */
+.skor-buyuk { font-size: 48px; color: var(--iyi); font-weight: 700; margin: 4px 0 12px; }
+.ozet { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 8px 0 16px; }
+.ozet > div { background: var(--panel-acik); border-radius: 10px; padding: 12px 16px; }
+.ozet h4 { margin: 0 0 6px; color: var(--soluk); font-weight: 600; font-size: 14px; }
+.ozet p { margin: 2px 0; font-size: 14px; }
+.ozet .alt-skor { font-size: 24px; font-weight: 700; color: var(--vurgu); }
+@media (max-width: 600px) { .ozet { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="ust-bar">
+    <h1>HELION</h1>
+    <p>Astronot göreve hazırlık öz-testi</p>
+  </header>
+
+  <main>
+    <h2>Hatırlama</h2>
+    <div class="ust-satir">
+      <p class="soluk" style="margin:0">İki test: günün cümlesini hatırlama ve renk/şekil dizisini tekrarlama.</p>
+      <div class="adimlar">
+        <span id="adim-cumle">1 · Cümle</span>
+        <span id="adim-dizi">2 · Dizi</span>
+        <span id="adim-sonuc">Sonuç</span>
+      </div>
+    </div>
+
+    <!-- 1A) Cümleleri oku ve aklında tut -->
+    <section id="ekran-ezber" class="ekran">
+      <div class="panel">
+        <div class="sayac">Cümle testi · Ezberle</div>
+        <p class="soluk">Bu iki cümleyi dikkatle oku ve aklında tut. Hazır olunca "Ezberledim"e bas; cümleler gizlenecek ve senden yazman istenecek.</p>
+        <div id="ezber-cumle"></div>
+        <div class="alt-butonlar">
+          <button id="btn-ezberledim" class="birincil">Ezberledim</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1B) Cümleleri yaz -->
+    <section id="ekran-cumle" class="ekran">
+      <div class="panel">
+        <div class="sayac">Cümle testi · Yaz</div>
+        <p>Az önce okuduğun iki cümleyi hatırladığın kadarıyla yaz. Sıra önemli değil.</p>
+        <p class="soluk">Kelimeleri doğru yazman yeterli; Türkçe karakter farkları (ı/i, ş/s, ğ/g…) ve noktalama sorun değil.</p>
+        <textarea id="cumle-girdi-1" class="cumle-girdi" placeholder="1. cümle…" spellcheck="false" autocomplete="off"></textarea>
+        <textarea id="cumle-girdi-2" class="cumle-girdi" placeholder="2. cümle…" spellcheck="false" autocomplete="off"></textarea>
+        <div class="alt-butonlar">
+          <button id="btn-cumle-gonder" class="birincil" disabled>Gönder</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1D) Cümle sonucu -->
+    <section id="ekran-cumle-sonuc" class="ekran">
+      <div class="panel">
+        <div class="sayac">Cümle testi · Sonuç</div>
+        <p class="skor-buyuk" id="cumle-skor"></p>
+        <p class="soluk" style="margin:0">Asıl cümleler (yeşil: hatırlanan, kırmızı: eksik/yanlış):</p>
+        <div id="cumle-kelimeler"></div>
+        <p class="soluk" style="margin:0">Senin cevapların: <span id="cumle-cevap"></span></p>
+        <div class="alt-butonlar">
+          <button id="btn-diziye-gec" class="birincil">Dizi Testine Geç</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2) Dizi testi -->
+    <section id="ekran-dizi" class="ekran">
+      <div class="panel">
+        <div class="ust-satir">
+          <div class="sayac" id="dizi-tur">Dizi testi</div>
+          <div class="sayac" id="dizi-ilerleme"></div>
+        </div>
+        <div id="dizi-sahne" class="dizi-sahne"></div>
+        <p id="dizi-mesaj" class="dizi-mesaj">Öğeler tek tek gösterilecek. Sonra aynı sırayla tıkla.</p>
+        <div id="dizi-yuvalar" class="dizi-yuvalar"></div>
+        <div id="dizi-tuslar" class="dizi-tuslar"></div>
+        <div class="alt-butonlar">
+          <button id="btn-dizi" class="birincil">Turu Başlat</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3) Bölüm sonucu -->
+    <section id="ekran-sonuc" class="ekran">
+      <div class="panel">
+        <div class="sayac">Hatırlama · Bölüm skoru</div>
+        <p class="skor-buyuk" id="bolum-skor"></p>
+        <div class="ozet">
+          <div>
+            <h4>Cümle testi</h4>
+            <p class="alt-skor" id="oz-cumle"></p>
+            <p id="oz-cumle-detay"></p>
+          </div>
+          <div>
+            <h4>Dizi testi</h4>
+            <p class="alt-skor" id="oz-dizi"></p>
+            <p id="oz-dizi-detay"></p>
+          </div>
+        </div>
+        <p class="soluk">Skor kaydedildi. Bölüm skoru, iki testin ortalamasıdır.</p>
+        <div class="alt-butonlar">
+          <button id="btn-ana" class="birincil">Ana Ekrana Dön</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+'use strict';
+
+/* HELION — Hatırlama bölümü, tek başına çalışan sürüm.
+   Skor: localStorage 'helionResults'.hatirlama */
+var SONUC_ANAHTARI = 'helionResults';
+var ANA_EKRAN = 'index.html';   // "Ana Ekrana Dön" butonunun gideceği sayfa
+
+/* Günlük hayattan 100 basit cümle. Her testte bunlardan 2 farklı cümle rastgele seçilir. */
+var GUNLUK_CUMLELER = [
+  "Sabah kahvaltıda peynir ve zeytin yedim.",
+  "Otobüs bugün on dakika geç geldi.",
+  "Annem akşam yemeği için çorba yaptı.",
+  "Market alışverişinde ekmek almayı unuttum.",
+  "Komşumuzun kedisi bahçede uyuyordu.",
+  "Yağmur başlayınca şemsiyemi açtım.",
+  "Kardeşim okuldan eve yorgun döndü.",
+  "Hafta sonu parkta yürüyüş yaptık.",
+  "Telefonumun şarjı öğleden sonra bitti.",
+  "Bakkaldan iki şişe süt aldım.",
+  "Arkadaşım bana güzel bir kitap önerdi.",
+  "Çay demlenirken pencereyi açtım.",
+  "Sabah alarmı duymadım ve geç kaldım.",
+  "Babam arabayı yıkamak için dışarı çıktı.",
+  "Fırından taze simit kokusu geliyordu.",
+  "Akşam televizyonda eski bir film izledik.",
+  "Mutfaktaki musluk yine damlatıyor.",
+  "Postacı kapıya bir paket bıraktı.",
+  "Bugün işe bisikletle gittim.",
+  "Çamaşırları balkona astım.",
+  "Okulun önünde küçük bir köpek gördüm.",
+  "Teyzem bize akşam yemeğine geldi.",
+  "Kahvemi şekersiz içmeyi seviyorum.",
+  "Sınavdan önce bütün gece çalıştım.",
+  "Pazardan taze domates ve biber aldım.",
+  "Asansör bozuk olduğu için merdiveni kullandım.",
+  "Dedem bahçede elma ağacını budadı.",
+  "Öğle arasında arkadaşlarla makarna yedik.",
+  "Kırmızı ışıkta durup yayaları bekledim.",
+  "Odamı topladıktan sonra kitap okudum.",
+  "Kış geldiği için kalın montumu çıkardım.",
+  "Eczaneden baş ağrısı için ilaç aldım.",
+  "Annem bana sıcak bir süt hazırladı.",
+  "Bugün hava çok güneşli ve sıcaktı.",
+  "Toplantı beklediğimden uzun sürdü.",
+  "Arkadaşımın doğum günü için pasta aldık.",
+  "Akşam yürüyüşünde ayı seyrettim.",
+  "Bulaşıkları yıkayıp mutfağı temizledim.",
+  "Kütüphanede sessizce ödevimi bitirdim.",
+  "Kardeşimle birlikte satranç oynadık.",
+  "Sabah koşusundan sonra duş aldım.",
+  "Komşu teyze bize kurabiye getirdi.",
+  "Metroda yanımdaki çocuk şarkı söylüyordu.",
+  "Çiçekleri sulamayı yine unuttum.",
+  "Yeni ayakkabılarım ayağımı biraz sıktı.",
+  "Kahvaltıda iki tane haşlanmış yumurta yedim.",
+  "Dolmuşta para üstünü almayı unuttum.",
+  "Öğretmenimiz bize kısa bir hikaye okudu.",
+  "Bahçedeki kuşlara ekmek kırıntısı verdim.",
+  "Akşam yemeğinden sonra salonda çay içtik.",
+  "Buzdolabında hiç yoğurt kalmamış.",
+  "Saçımı kestirmek için berbere gittim.",
+  "Bugün iş yerinde yeni biriyle tanıştım.",
+  "Yolda eski bir okul arkadaşıma rastladım.",
+  "Rüzgar balkondaki sandalyeyi devirdi.",
+  "Kalemim bitince arkadaşımdan ödünç aldım.",
+  "Annemi arayıp hatırını sordum.",
+  "Pazar sabahı geç saatte uyandım.",
+  "Mahalledeki fırın bugün kapalıydı.",
+  "Yemekten sonra biraz meyve yedim.",
+  "Sokakta çocuklar top oynuyordu.",
+  "Faturayı ödemek için bankaya uğradım.",
+  "Kış tatilinde köydeki evimize gittik.",
+  "Ellerimi yıkadıktan sonra sofraya oturdum.",
+  "Kuzenim yeni bir köpek sahiplendi.",
+  "Akşam erken yatıp dinlendim.",
+  "Sabah işe giderken radyo dinledim.",
+  "Mektup yazmak için masaya oturdum.",
+  "Halamın evinde kocaman bir akvaryum var.",
+  "Bugün dişçiye kontrole gittim.",
+  "Kahvaltı sofrasını birlikte hazırladık.",
+  "Gece boyunca yağmur yağdı.",
+  "Elektrikler kesilince mum yaktık.",
+  "Kırtasiyeden yeni bir defter aldım.",
+  "Babam bana bisiklet sürmeyi öğretti.",
+  "Bugün öğle yemeğini evden getirdim.",
+  "Trende cam kenarında oturdum.",
+  "Komşumuz yeni bir eve taşındı.",
+  "Arkadaşlarla sinemaya gitmeye karar verdik.",
+  "Kar yağınca çocuklar kardan adam yaptı.",
+  "Su içmek için mutfağa gittim.",
+  "Bugün odamın perdelerini yıkadım.",
+  "Teyzemin bahçesinde çilek topladık.",
+  "Akşam ders çalışırken müzik dinledim.",
+  "Sabah otobüste oturacak yer bulamadım.",
+  "Annemle birlikte sarma sardık.",
+  "Kapının anahtarını içeride unuttum.",
+  "Hafta sonu dedemle balığa gittik.",
+  "Bugün çok güzel bir gün batımı vardı.",
+  "Arkadaşım bana bir kartpostal gönderdi.",
+  "Mutfakta yeni bir yemek tarifi denedim.",
+  "Bilgisayarımı güncelledikten sonra yeniden başlattım.",
+  "Yaşlı bir adama hastanenin yolunu gösterdim.",
+  "Parkta salıncakta biraz sallandım.",
+  "Kahve içmek için küçük bir kafeye girdim.",
+  "Bugün işten erken çıktım.",
+  "Kardeşim ödevini bitirince oyun oynadı.",
+  "Bayramda bütün aile bir araya geldi.",
+  "Çantamı hazırlayıp kapının yanına koydum.",
+  "Akşam balkonda oturup yıldızları izledim."
+];
+
+/* ---------- Ortak yardımcılar ---------- */
+function $(id) { return document.getElementById(id); }
+
+function sonuclariOku() {
+  try {
+    var veri = JSON.parse(localStorage.getItem(SONUC_ANAHTARI));
+    return veri && typeof veri === 'object' ? veri : {};
+  } catch (e) { return {}; }
+}
+
+function sonucYaz(anahtar, deger, detay) {
+  var veri = sonuclariOku();
+  veri[anahtar] = deger;
+  if (detay) veri[anahtar + 'Detay'] = detay;
+  try { localStorage.setItem(SONUC_ANAHTARI, JSON.stringify(veri)); } catch (e) {}
+}
+
+function ekranGoster(id) {
+  document.querySelectorAll('.ekran').forEach(function (e) { e.classList.remove('aktif'); });
+  $(id).classList.add('aktif');
+  var adim = { 'ekran-ezber': 'cumle', 'ekran-cumle': 'cumle',
+               'ekran-cumle-sonuc': 'cumle', 'ekran-dizi': 'dizi', 'ekran-sonuc': 'sonuc' }[id];
+  var sira = ['cumle', 'dizi', 'sonuc'];
+  sira.forEach(function (s, i) {
+    var el = $('adim-' + s);
+    el.className = s === adim ? 'aktif' : (i < sira.indexOf(adim) ? 'tamam' : '');
+  });
+}
+
+var sonuc = { cumle: null, dizi: null };
+
+/* ============================================================
+   1) CÜMLE TESTİ
+   ============================================================ */
+var CUMLE_SAYISI = 2;
+var gununCumleleri = null; // { texts: [c1, c2] }
+
+// Havuzdan birbirinden farklı 2 cümle seç
+function cumleleriSec() {
+  var texts = [];
+  while (texts.length < CUMLE_SAYISI) {
+    var c = GUNLUK_CUMLELER[Math.floor(Math.random() * GUNLUK_CUMLELER.length)];
+    if (texts.indexOf(c) === -1) texts.push(c);
+  }
+  return { texts: texts };
+}
+
+// Türkçe karakter ve noktalama farklarını yok sayan sadeleştirme
+function sadelestir(metin) {
+  var harita = { 'ı': 'i', 'ş': 's', 'ğ': 'g', 'ü': 'u', 'ö': 'o', 'ç': 'c', 'â': 'a', 'î': 'i', 'û': 'u' };
+  return metin
+    .toLocaleLowerCase('tr')
+    .replace(/̇/g, '')          // bazı ortamlarda "İ" → "i" + birleşik nokta olur
+    .replace(/[ışğüöçâîû]/g, function (h) { return harita[h]; })
+    .replace(/['’\-]/g, '')          // "Dünya'yı" tek kelime sayılsın
+    .replace(/[^a-z0-9\s]/g, ' ');
+}
+function kelimelereAyir(metin) {
+  return sadelestir(metin).split(/\s+/).filter(Boolean);
+}
+
+// Kelime bazlı skor: asıl cümlelerdeki her kelime, cevaplarda (sırası ve hangi kutuya
+// yazıldığı önemsiz) bir kez eşleşebilir. Skor = doğru kelime / toplam kelime × 100.
+function cumleSkoru(asillar, cevaplar) {
+  var havuz = {};
+  cevaplar.forEach(function (c) {
+    kelimelereAyir(c).forEach(function (k) { havuz[k] = (havuz[k] || 0) + 1; });
+  });
+  var dogru = 0, toplam = 0;
+  var isaretler = asillar.map(function (asil) {
+    return kelimelereAyir(asil).map(function (k) {
+      toplam++;
+      if (havuz[k]) { havuz[k]--; dogru++; return true; }
+      return false;
+    });
+  });
+  return {
+    skor: toplam ? Math.round(dogru * 100 / toplam) : 0,
+    dogru: dogru,
+    toplam: toplam,
+    isaretler: isaretler
+  };
+}
+
+// Önce iki cümleyi göster; "Ezberledim"e basınca gizle ve yazdır.
+function cumleTestiniBaslat() {
+  gununCumleleri = cumleleriSec();
+  var kutu = $('ezber-cumle');
+  kutu.innerHTML = '';
+  gununCumleleri.texts.forEach(function (c, i) {
+    var d = document.createElement('div');
+    d.className = 'ezber-cumle';
+    d.innerHTML = '<small>' + (i + 1) + '. CÜMLE</small>';
+    d.appendChild(document.createTextNode('“' + c + '”'));
+    kutu.appendChild(d);
+  });
+  ekranGoster('ekran-ezber');
+}
+
+function girdiler() { return [$('cumle-girdi-1'), $('cumle-girdi-2')]; }
+
+function cumleSorusunaGec() {
+  $('ezber-cumle').innerHTML = ''; // cümleler sayfada kalmasın
+  girdiler().forEach(function (g) { g.value = ''; });
+  $('btn-cumle-gonder').disabled = true;
+  ekranGoster('ekran-cumle');
+  $('cumle-girdi-1').focus();
+}
+
+$('btn-ezberledim').addEventListener('click', cumleSorusunaGec);
+
+girdiler().forEach(function (g, i) {
+  g.addEventListener('input', function () {
+    $('btn-cumle-gonder').disabled = !girdiler().some(function (x) { return x.value.trim(); });
+  });
+  g.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (i === 0) $('cumle-girdi-2').focus();
+      else if (!$('btn-cumle-gonder').disabled) $('btn-cumle-gonder').click();
+    }
+  });
+});
+
+$('btn-cumle-gonder').addEventListener('click', function () {
+  var cevaplar = girdiler().map(function (g) { return g.value.trim(); });
+  if (!cevaplar.some(Boolean)) return;
+  var s = cumleSkoru(gununCumleleri.texts, cevaplar);
+  sonuc.cumle = s.skor;
+  sonuc.cumleDetay = { dogru: s.dogru, toplam: s.toplam };
+
+  $('cumle-skor').textContent = s.skor + ' / 100';
+  var kutu = $('cumle-kelimeler');
+  kutu.innerHTML = '';
+  // Asıl cümleleri orijinal yazımıyla göster (noktalamasız kelimeler)
+  gununCumleleri.texts.forEach(function (metin, ci) {
+    var satir = document.createElement('div');
+    satir.className = 'kelimeler';
+    var gorunen = metin.split(/\s+/).filter(function (k) { return sadelestir(k).trim(); });
+    gorunen.forEach(function (k, i) {
+      var span = document.createElement('span');
+      span.textContent = k.replace(/[.,!?;:“”"']/g, '');
+      span.className = s.isaretler[ci][i] ? 'dogru' : 'yanlis';
+      satir.appendChild(span);
+    });
+    kutu.appendChild(satir);
+  });
+  $('cumle-cevap').textContent = cevaplar.map(function (c) { return '“' + (c || '—') + '”'; }).join('  ·  ');
+  ekranGoster('ekran-cumle-sonuc');
+});
+
+$('btn-diziye-gec').addEventListener('click', function () {
+  diziyiSifirla();
+  ekranGoster('ekran-dizi');
+});
+
+/* ============================================================
+   2) DİZİ TESTİ
+   ============================================================ */
+var OGE_SURESI_MS = 800;   // her öğenin ekranda kalma süresi
+var ARA_SURESI_MS = 200;   // öğeler arası boşluk (aynı öğe arka arkaya gelse de ayırt edilsin)
+var BASLANGIC_UZUNLUK = 5;
+var TUR_SAYISI = 2;
+
+var OGELER = [
+  { ad: 'Kırmızı daire',   renk: '#ff6b6b', sekil: '<circle cx="50" cy="50" r="38"/>' },
+  { ad: 'Mavi kare',       renk: '#4cc9f0', sekil: '<rect x="14" y="14" width="72" height="72" rx="6"/>' },
+  { ad: 'Yeşil üçgen',     renk: '#5ee6a8', sekil: '<polygon points="50,10 90,86 10,86"/>' },
+  { ad: 'Sarı yıldız',     renk: '#ffd166', sekil: '<polygon points="50,6 61,38 95,38 67,58 78,92 50,71 22,92 33,58 5,38 39,38"/>' },
+  { ad: 'Mor elmas',       renk: '#b388ff', sekil: '<polygon points="50,6 90,50 50,94 10,50"/>' },
+  { ad: 'Turuncu altıgen', renk: '#ff9f43', sekil: '<polygon points="27,10 73,10 96,50 73,90 27,90 4,50"/>' }
+];
+
+function ogeSvg(i) {
+  var o = OGELER[i];
+  return '<svg viewBox="0 0 100 100" aria-label="' + o.ad + '" fill="' + o.renk + '">' + o.sekil + '</svg>';
+}
+
+var dizi = {
+  tur: 0,              // 0-temelli
+  hedef: [],
+  girilen: [],
+  dogruToplam: 0,
+  ogeToplam: 0,
+  turSonuclari: [],
+  durum: 'hazir',      // 'hazir' | 'gosteriliyor' | 'giris' | 'tur-bitti' | 'bitti'
+  zamanlayicilar: []
+};
+
+// Dokunma tuşlarını bir kez oluştur
+(function () {
+  var tuslar = $('dizi-tuslar');
+  OGELER.forEach(function (o, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.title = o.ad;
+    b.innerHTML = ogeSvg(i);
+    b.addEventListener('click', function () { ogeyeBasildi(i); });
+    tuslar.appendChild(b);
+  });
+})();
+
+function tuslariAyarla(acik) {
+  $('dizi-tuslar').querySelectorAll('button').forEach(function (b) { b.disabled = !acik; });
+}
+
+function zamanlayicilariTemizle() {
+  dizi.zamanlayicilar.forEach(clearTimeout);
+  dizi.zamanlayicilar = [];
+}
+
+function diziMesaj(metin, sinif) {
+  $('dizi-mesaj').textContent = metin;
+  $('dizi-mesaj').className = 'dizi-mesaj' + (sinif ? ' ' + sinif : '');
+}
+
+function turUzunlugu() { return BASLANGIC_UZUNLUK + dizi.tur; }
+
+function ustBilgiGuncelle() {
+  $('dizi-tur').textContent = 'Dizi testi · Tur ' + (dizi.tur + 1) + ' / ' + TUR_SAYISI;
+  $('dizi-ilerleme').textContent = dizi.durum === 'giris'
+    ? dizi.girilen.length + ' / ' + dizi.hedef.length
+    : turUzunlugu() + ' öğe';
+}
+
+function yuvalariCiz(kontrolEt) {
+  var kutu = $('dizi-yuvalar');
+  kutu.innerHTML = '';
+  for (var i = 0; i < dizi.hedef.length; i++) {
+    var y = document.createElement('div');
+    y.className = 'dizi-yuva';
+    if (i < dizi.girilen.length) {
+      y.innerHTML = ogeSvg(dizi.girilen[i]);
+      if (kontrolEt) y.classList.add(dizi.girilen[i] === dizi.hedef[i] ? 'dogru' : 'yanlis');
+    }
+    kutu.appendChild(y);
+  }
+}
+
+function diziyiSifirla() {
+  zamanlayicilariTemizle();
+  dizi.tur = 0;
+  dizi.hedef = [];
+  dizi.girilen = [];
+  dizi.dogruToplam = 0;
+  dizi.ogeToplam = 0;
+  dizi.turSonuclari = [];
+  dizi.durum = 'hazir';
+  $('dizi-sahne').innerHTML = '';
+  $('dizi-yuvalar').innerHTML = '';
+  tuslariAyarla(false);
+  diziMesaj('Öğeler tek tek gösterilecek (her biri 0,8 sn). Sonra aynı sırayla tıkla.');
+  $('btn-dizi').textContent = 'Turu Başlat';
+  $('btn-dizi').hidden = false;
+  ustBilgiGuncelle();
+}
+
+function rastgeleDizi(n) {
+  var d = [];
+  for (var i = 0; i < n; i++) {
+    var s;
+    do { s = Math.floor(Math.random() * OGELER.length); } while (i > 0 && s === d[i - 1]);
+    d.push(s);
+  }
+  return d;
+}
+
+function turuBaslat() {
+  zamanlayicilariTemizle();
+  dizi.hedef = rastgeleDizi(turUzunlugu());
+  dizi.girilen = [];
+  dizi.durum = 'gosteriliyor';
+  $('btn-dizi').hidden = true;
+  $('dizi-yuvalar').innerHTML = '';
+  tuslariAyarla(false);
+  diziMesaj('İzle…');
+  ustBilgiGuncelle();
+
+  var sahne = $('dizi-sahne');
+  var t = 400; // kısa hazırlık
+  dizi.hedef.forEach(function (oge) {
+    dizi.zamanlayicilar.push(setTimeout(function () { sahne.innerHTML = ogeSvg(oge); }, t));
+    t += OGE_SURESI_MS;
+    dizi.zamanlayicilar.push(setTimeout(function () { sahne.innerHTML = ''; }, t));
+    t += ARA_SURESI_MS;
+  });
+  dizi.zamanlayicilar.push(setTimeout(girisiBaslat, t));
+}
+
+function girisiBaslat() {
+  dizi.durum = 'giris';
+  diziMesaj('Şimdi aynı sırayla tıkla.');
+  tuslariAyarla(true);
+  yuvalariCiz(false);
+  ustBilgiGuncelle();
+}
+
+function ogeyeBasildi(i) {
+  if (dizi.durum !== 'giris') return;
+  dizi.girilen.push(i);
+  yuvalariCiz(false);
+  ustBilgiGuncelle();
+  if (dizi.girilen.length >= dizi.hedef.length) turuBitir();
+}
+
+function turuBitir() {
+  dizi.durum = 'tur-bitti';
+  tuslariAyarla(false);
+  var dogru = 0;
+  dizi.hedef.forEach(function (h, i) { if (dizi.girilen[i] === h) dogru++; });
+  dizi.dogruToplam += dogru;
+  dizi.ogeToplam += dizi.hedef.length;
+  dizi.turSonuclari.push(dogru + '/' + dizi.hedef.length);
+  yuvalariCiz(true);
+  // Doğru sırayı sahnede küçük olarak göster
+  $('dizi-sahne').innerHTML = '<div class="dizi-yuvalar" style="margin:0">' +
+    dizi.hedef.map(function (h) { return '<div class="dizi-yuva" style="border-style:solid">' + ogeSvg(h) + '</div>'; }).join('') +
+    '</div>';
+  diziMesaj('Tur ' + (dizi.tur + 1) + ': ' + dogru + ' / ' + dizi.hedef.length + ' doğru. (Üstte doğru sıra)',
+            dogru === dizi.hedef.length ? 'iyi' : (dogru === 0 ? 'uyari' : ''));
+
+  $('btn-dizi').hidden = false;
+  if (dizi.tur + 1 < TUR_SAYISI) {
+    $('btn-dizi').textContent = 'Sonraki Tur';
+  } else {
+    dizi.durum = 'bitti';
+    $('btn-dizi').textContent = 'Sonucu Gör';
+  }
+}
+
+$('btn-dizi').addEventListener('click', function () {
+  if (dizi.durum === 'hazir') { turuBaslat(); return; }
+  if (dizi.durum === 'tur-bitti') { dizi.tur++; turuBaslat(); return; }
+  if (dizi.durum === 'bitti') bolumuBitir();
+});
+
+/* ============================================================
+   3) BÖLÜM SONUCU
+   ============================================================ */
+function bolumuBitir() {
+  sonuc.dizi = Math.round(dizi.dogruToplam * 100 / dizi.ogeToplam);
+  var bolum = Math.round((sonuc.cumle + sonuc.dizi) / 2);
+
+  sonucYaz('hatirlama', bolum, {
+    cumle: sonuc.cumle,
+    dizi: sonuc.dizi,
+    cumleDogruKelime: sonuc.cumleDetay.dogru + '/' + sonuc.cumleDetay.toplam,
+    diziTurlar: dizi.turSonuclari
+  });
+
+  $('bolum-skor').textContent = bolum + ' / 100';
+  $('oz-cumle').textContent = sonuc.cumle;
+  $('oz-cumle-detay').textContent = 'Doğru kelime: ' + sonuc.cumleDetay.dogru + ' / ' + sonuc.cumleDetay.toplam;
+  $('oz-dizi').textContent = sonuc.dizi;
+  $('oz-dizi-detay').textContent = 'Turlar: ' + dizi.turSonuclari.join(' · ') +
+    ' (toplam ' + dizi.dogruToplam + ' / ' + dizi.ogeToplam + ')';
+  ekranGoster('ekran-sonuc');
+}
+
+$('btn-ana').addEventListener('click', function () { location.href = ANA_EKRAN; });
+
+/* Başlangıç */
+cumleTestiniBaslat();
+  </script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELION — Nefes Egzersizi</title>
+<style>
+  :root{ --bg:#081426; --panel:#0e2138; --panel2:#122a47; --line:#1f3a5c; --text:#eaf2fa;
+         --muted:#93a9c0; --teal:#2eb7d3; --teal-d:#0e86a3; --gold:#e8b44a; --green:#3ecf7a; }
+  *{margin:0; padding:0; box-sizing:border-box;}
+  body{ font-family:"Segoe UI", system-ui, -apple-system, Arial, sans-serif; color:var(--text);
+        background:radial-gradient(1100px 550px at 70% -10%, #14304f 0%, var(--bg) 55%); min-height:100vh; }
+  header{ display:flex; align-items:center; gap:14px; padding:14px 22px; border-bottom:2px solid var(--teal-d);
+          background:rgba(10,24,42,.85); }
+  header .logo{ font-size:24px; font-weight:800; letter-spacing:3px; }
+  header .logo span{ color:var(--teal); }
+  header .sub{ color:var(--muted); font-size:14px; }
+  main{ max-width:880px; margin:0 auto; padding:26px 18px 60px; text-align:center; }
+  h1{ font-size:27px; margin-bottom:6px; }
+  .lead{ color:var(--muted); font-size:14.5px; line-height:1.55; margin-bottom:8px; }
+  .stage{ display:flex; flex-direction:column; align-items:center; padding:26px 0 8px; }
+  .ring-wrap{ width:300px; height:300px; display:flex; align-items:center; justify-content:center; }
+  .ring{ width:210px; height:210px; border-radius:50%;
+         background:radial-gradient(circle at 35% 30%, #2a5f8a, #12365c 70%);
+         border:2px solid var(--teal-d); display:flex; flex-direction:column; align-items:center; justify-content:center;
+         transition:transform 4s linear, border-color .5s; box-shadow:0 0 60px rgba(46,183,211,.25); }
+  .ring .phase{ font-size:24px; font-weight:800; }
+  .ring .count{ font-size:44px; font-weight:800; color:var(--teal); line-height:1.1; }
+  .ring .cyc{ font-size:12.5px; color:var(--muted); }
+  .presets{ display:flex; gap:10px; justify-content:center; margin:16px 0 6px; }
+  .chip{ padding:9px 18px; border-radius:999px; border:1px solid var(--line); background:var(--panel);
+         color:var(--text); font-size:14.5px; cursor:pointer; }
+  .chip.on{ background:var(--teal-d); border-color:var(--teal); font-weight:700; }
+  .actions{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+  .btn{ padding:13px 28px; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer;
+        background:linear-gradient(180deg, var(--teal), var(--teal-d)); color:#fff; text-decoration:none; display:inline-block; }
+  .btn.ghost{ background:transparent; border:1px solid var(--line); color:var(--text); }
+  .ok{ color:var(--green); font-weight:700; font-size:15px; margin-top:14px; min-height:20px; }
+  .foot{ color:var(--muted); font-size:12.5px; margin-top:24px; line-height:1.6; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">HEL<span>ION</span></div>
+  <div class="sub">Ek Bölüm — Nefes Egzersizi • Kutu nefesi (skorsuz)</div>
+</header>
+<main>
+  <h1>Nefes Egzersizi</h1>
+  <p class="lead">Kutu nefesi: 4 saniye nefes al, 4 saniye tut, 4 saniye ver, 4 saniye tut.<br>
+  Halkanın ritmini izle. Raporun “dinlen” önerisinin uygulama karşılığıdır.</p>
+
+  <div class="stage">
+    <div class="ring-wrap">
+      <div class="ring" id="ring">
+        <div class="phase" id="phase">Hazır</div>
+        <div class="count" id="count">–</div>
+        <div class="cyc" id="cyc">Tur: 0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="presets" id="presets">
+    <button class="chip" data-dk="1">1 dakika</button>
+    <button class="chip on" data-dk="2">2 dakika</button>
+    <button class="chip" data-dk="3">3 dakika</button>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="btnStart">▶ Başla</button>
+    <button class="btn ghost" id="btnReset">Sıfırla</button>
+    <a class="btn ghost" href="index.html">⌂ Ana Ekran</a>
+  </div>
+  <div class="ok" id="okMsg"></div>
+
+  <p class="foot">Rahatsızlık hissedersen egzersizi bırak ve normal nefes al. Bu egzersiz tıbbi tedavi değildir.</p>
+</main>
+<script>
+(function(){
+  var PHASES = [ {ad:"Nefes al", olcek:1.38}, {ad:"Tut", olcek:1.38}, {ad:"Nefes ver", olcek:1.0}, {ad:"Tut", olcek:1.0} ];
+  var DUR = 4000;
+  var sureSn = 120, running = false, phaseIdx = 0, phaseEnd = 0, endAt = 0, tur = 0, timer = null, pausedAt = 0;
+  var $ = function(id){ return document.getElementById(id); };
+  var ring = $("ring"), phaseEl = $("phase"), countEl = $("count"), cycEl = $("cyc");
+
+  document.querySelectorAll("#presets .chip").forEach(function(c){
+    c.onclick = function(){
+      if (running) return;
+      document.querySelectorAll("#presets .chip").forEach(function(x){ x.classList.remove("on"); });
+      c.classList.add("on"); sureSn = +c.dataset.dk * 60;
+    };
+  });
+
+  function setPhase(i){
+    phaseIdx = i;
+    var p = PHASES[i];
+    phaseEl.textContent = p.ad;
+    ring.style.transform = "scale(" + p.olcek + ")";
+    phaseEnd = performance.now() + DUR;
+    if (i === 0 && (tur > 0 || started)) { /* tur sayaci faz 0'a donuste artar */ }
+  }
+  var started = false;
+  function tick(){
+    if (!running) return;
+    var now = performance.now();
+    if (now >= endAt){ finish(); return; }
+    if (now >= phaseEnd){
+      var next = (phaseIdx + 1) % 4;
+      if (next === 0){ tur++; cycEl.textContent = "Tur: " + tur; }
+      ring.style.transition = "none"; void ring.offsetWidth; ring.style.transition = "transform 4s linear";
+      setPhase(next);
+    }
+    countEl.textContent = Math.ceil((phaseEnd - now) / 1000);
+    timer = setTimeout(tick, 100);
+  }
+  function start(){
+    if (running){ // duraklat
+      running = false; clearTimeout(timer); pausedAt = performance.now();
+      $("btnStart").textContent = "▶ Devam et"; phaseEl.textContent = "Duraklatıldı"; return;
+    }
+    running = true; $("btnStart").textContent = "⏸ Duraklat";
+    if (!started){
+      started = true; tur = 0; cycEl.textContent = "Tur: 0";
+      endAt = performance.now() + sureSn * 1000;
+      setPhase(0);
+    } else {
+      var delta = performance.now() - pausedAt; endAt += delta; phaseEnd += delta;
+    }
+    tick();
+  }
+  function finish(){
+    running = false; clearTimeout(timer);
+    phaseEl.textContent = "Tamamlandı ✓"; countEl.textContent = "–";
+    ring.style.transform = "scale(1)";
+    $("btnStart").textContent = "▶ Başla"; started = false;
+    $("okMsg").textContent = "✓ Egzersiz bitti — kayıt kuyruğa eklendi.";
+    var q = [];
+    try { q = JSON.parse(localStorage.getItem("helionQueue") || "[]"); } catch(e){}
+    q.push({ tip: "nefes", zaman: new Date().toISOString(), veri: { sureSn: sureSn, tur: tur } });
+    localStorage.setItem("helionQueue", JSON.stringify(q));
+  }
+  function reset(){
+    running = false; clearTimeout(timer); started = false; tur = 0;
+    phaseEl.textContent = "Hazır"; countEl.textContent = "–"; cycEl.textContent = "Tur: 0";
+    ring.style.transform = "scale(1)"; $("btnStart").textContent = "▶ Başla"; $("okMsg").textContent = "";
+  }
+  $("btnStart").onclick = start;
+  $("btnReset").onclick = reset;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HELION — Hazırlık Raporu</title>
+  <style>
+/* HELION — koyu lacivert uzay teması */
+:root {
+  --zemin: #070d1f;
+  --panel: #0f1a36;
+  --panel-acik: #16244a;
+  --cizgi: #263663;
+  --yazi: #e6ecff;
+  --soluk: #8fa0cc;
+  --vurgu: #4cc9f0;
+  --iyi: #5ee6a8;
+  --orta: #ffd166;
+  --uyari: #ff6b6b;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at top, #12204a 0%, var(--zemin) 60%);
+  color: var(--yazi);
+  font-family: "Segoe UI", Ubuntu, "DejaVu Sans", Arial, sans-serif;
+  line-height: 1.5;
+}
+
+.ust-bar { padding: 20px 32px; border-bottom: 1px solid var(--cizgi); }
+.ust-bar h1 { margin: 0; letter-spacing: 6px; color: var(--vurgu); font-size: 26px; }
+.ust-bar p { margin: 2px 0 0; color: var(--soluk); font-size: 14px; }
+
+main { max-width: 960px; margin: 0 auto; padding: 24px 20px 48px; }
+h2 { margin: 8px 0 4px; }
+h3 { margin: 0 0 10px; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; color: var(--soluk); font-weight: 600; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+.birincil {
+  background: var(--vurgu);
+  color: #04122b;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 28px;
+}
+.ikincil {
+  background: none;
+  border: 1px solid var(--vurgu);
+  color: var(--vurgu);
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 10px 28px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--cizgi);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-top: 16px;
+}
+.soluk { color: var(--soluk); font-size: 14px; }
+
+/* Eksik bölüm uyarısı */
+.uyari-kutu {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--orta);
+  border-left-width: 4px;
+  border-radius: 8px;
+  background: rgba(255, 209, 102, .08);
+  color: var(--orta);
+}
+.uyari-kutu strong { color: var(--yazi); }
+
+/* Toplam skor */
+.toplam { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.toplam-sayi { font-size: 88px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.toplam-sayi small { font-size: 28px; font-weight: 600; color: var(--soluk); }
+.seviye-iyi { color: var(--iyi); }
+.seviye-orta { color: var(--orta); }
+.seviye-dusuk { color: var(--uyari); }
+.toplam-bilgi p { margin: 2px 0; }
+.durum-etiket {
+  display: inline-block;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  margin-bottom: 6px;
+}
+
+/* Saf CSS çubuk grafik */
+.grafik { display: flex; flex-direction: column; gap: 12px; }
+.satir {
+  display: grid;
+  grid-template-columns: 170px 1fr 56px;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+.satir-ad { font-weight: 600; }
+.satir-ad small { display: block; font-weight: 400; font-size: 12px; color: var(--soluk); }
+.cubuk { height: 16px; background: var(--panel-acik); border-radius: 8px; overflow: hidden; }
+.cubuk > div { height: 100%; width: 0; background: var(--vurgu); border-radius: 8px; transition: width .6s ease-out; }
+.satir-skor { text-align: right; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.satir.eksik .satir-skor, .satir.eksik .satir-ad { color: var(--soluk); }
+.satir.zayif { border-color: var(--uyari); background: rgba(255, 107, 107, .07); }
+.satir.zayif .cubuk > div { background: var(--uyari); }
+.satir.zayif .satir-skor { color: var(--uyari); }
+.zayif-etiket {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--uyari);
+}
+@media (max-width: 600px) { .satir { grid-template-columns: 110px 1fr 44px; gap: 8px; } }
+
+/* Öneri ve not */
+.oneri-baslik { margin: 0 0 6px; font-size: 18px; }
+.oneri-metin { margin: 0; font-size: 16px; }
+.not { margin: 16px 0 0; font-size: 14px; color: var(--soluk); font-style: italic; }
+
+.alt-butonlar { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+
+/* ---------- Yazdırma: beyaz zemin, tek sayfa ---------- */
+@page { size: A4; margin: 12mm; }
+@media print {
+  :root {
+    --yazi: #111;
+    --soluk: #555;
+    --panel: #fff;
+    --panel-acik: #e8ebf2;
+    --cizgi: #c9cfdc;
+    --vurgu: #1769aa;
+    --iyi: #1d8a57;
+    --orta: #a86b00;
+    --uyari: #c62828;
+  }
+  html, body { background: #fff !important; min-height: 0; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .ust-bar { padding: 0 0 6px; }
+  .ust-bar h1 { font-size: 20px; }
+  main { max-width: none; padding: 0; }
+  h2 { margin: 8px 0 0; font-size: 18px; }
+  .panel { margin-top: 8px; padding: 10px 14px; break-inside: avoid; }
+  .uyari-kutu { margin-top: 8px; padding: 6px 10px; }
+  .toplam-sayi { font-size: 56px; }
+  .grafik { gap: 4px; }
+  .satir { padding: 4px 8px; grid-template-columns: 150px 1fr 48px; }
+  .cubuk > div { transition: none; }
+  .not { margin-top: 8px; }
+  .alt-butonlar { display: none; }
+}
+  </style>
+</head>
+<body>
+  <header class="ust-bar">
+    <h1>HELION</h1>
+    <p>Astronot göreve hazırlık öz-testi</p>
+  </header>
+
+  <main>
+    <h2>Hazırlık Raporu</h2>
+    <p class="soluk" id="rapor-tarih" style="margin:0"></p>
+
+    <div id="eksik-uyari" class="uyari-kutu" hidden></div>
+
+    <section class="panel">
+      <h3>Toplam skor</h3>
+      <div class="toplam">
+        <div id="toplam-sayi" class="toplam-sayi">—</div>
+        <div class="toplam-bilgi">
+          <span id="durum-etiket" class="durum-etiket"></span>
+          <p class="soluk" id="toplam-aciklama"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h3>Bölüm skorları</h3>
+      <div id="grafik" class="grafik"></div>
+    </section>
+
+    <section class="panel" id="oneri-panel" hidden>
+      <h3>Öneri</h3>
+      <p class="oneri-baslik" id="oneri-baslik"></p>
+      <p class="oneri-metin" id="oneri-metin"></p>
+    </section>
+
+    <section class="panel" id="gunluk-panel" hidden>
+      <h2>📅 Günlük Göstergeler</h2>
+      <p class="oneri-metin" id="gunluk-metin"></p>
+    </section>
+
+    <section class="panel" id="egilim-panel" hidden>
+      <h2>📈 Eğilim — Gün Gün Değişim</h2>
+      <div id="egilim-alan"></div>
+      <p class="not" style="margin-top:8px">Kuyruktaki kayıtlardan çizilir — bir bölümün günler içindeki düşüşü ya da toparlanması buradan izlenir.</p>
+    </section>
+
+    <p class="not">Düşük skor bir sağlık sorunu olduğu anlamına gelmez; düzenli tekrar testleri önerilir.</p>
+
+    <div class="alt-butonlar">
+      <button id="btn-yazdir" class="birincil">Raporu Yazdır</button>
+      <button id="btn-ana" class="ikincil">Ana Ekrana Dön</button>
+    </div>
+  </main>
+
+  <script>
+'use strict';
+
+/* Bölüm ağırlıkları. Toplam skor = Σ(ağırlık × skor) / Σ(ağırlık).
+   Hepsi 1 iken toplam skor, 4 bölümün düz ortalamasıdır. */
+var WEIGHTS = {
+  fiziksel: 1,
+  hatirlama: 1,
+  sosyallik: 1,
+  tepki: 1
+};
+
+/* HELION — Rapor bölümü, tek başına çalışan sürüm.
+   Skorları localStorage 'helionResults' nesnesinden okur. */
+var SONUC_ANAHTARI = 'helionResults';
+var ANA_EKRAN = 'index.html';   // "Ana Ekrana Dön" butonunun gideceği sayfa
+
+var BOLUMLER = [
+  { anahtar: 'fiziksel',  ad: 'Fiziksel Sağlık',     alt: 'Hareket testi' },
+  { anahtar: 'hatirlama', ad: 'Hatırlama',           alt: 'Cümle ve dizi' },
+  { anahtar: 'sosyallik', ad: 'Sosyallik',           alt: 'İletişim' },
+  { anahtar: 'tepki',     ad: 'Hassasiyet (Tepki)',  alt: 'Tepki süresi' }
+];
+
+/* En zayıf bölüme göre öneri metinleri (2 cümle, motive edici, teşhis dili yok) */
+var ONERILER = {
+  fiziksel:  'Vücudun her gün biraz hareketle daha esnek ve güçlü hissedecek; kısa bir esneme ya da yürüyüş molası bile fark yaratır. Hareketleri yavaş ve kontrollü tekrarlayarak bir sonraki testte kendi rekorunu geçebilirsin.',
+  hatirlama: 'Hafıza, düzenli çalıştırıldıkça güçlenen bir beceridir; gün içinde duyduğun bir cümleyi akşam kendine tekrar etmeyi dene. Küçük hafıza oyunlarıyla birkaç dakikalık pratik, bir sonraki testte farkını gösterecek.',
+  sosyallik: 'Ekip arkadaşlarınla kısa ama içten sohbetler, iletişim gücünü her gün biraz daha artırır. Bugün birine nasıl olduğunu sorup gerçekten dinlemek, harika bir ilk adım olabilir.',
+  tepki:     'Dinlenmiş bir zihin daha hızlı tepki verir; iyi bir uyku ve kısa molalar tepki süreni olumlu etkiler. Odaklanma egzersizleriyle birkaç dakikalık pratik yaparak bir sonraki denemede kendini yeniden ölçebilirsin.'
+};
+
+function $(id) { return document.getElementById(id); }
+
+function sonuclariOku() {
+  try {
+    var veri = JSON.parse(localStorage.getItem(SONUC_ANAHTARI));
+    return veri && typeof veri === 'object' ? veri : {};
+  } catch (e) { return {}; }
+}
+
+// Geçerli skor: 0–100 arası sayı (metin olarak kaydedilmişse de kabul et)
+function skorAl(veri, anahtar) {
+  var v = veri[anahtar];
+  if (v === null || v === undefined || v === '') return null;
+  v = Number(v);
+  if (!isFinite(v)) return null;
+  return Math.max(0, Math.min(100, Math.round(v)));
+}
+
+function seviye(skor) {
+  if (skor >= 75) return { sinif: 'seviye-iyi',   etiket: 'Göreve hazır' };
+  if (skor >= 50) return { sinif: 'seviye-orta',  etiket: 'Kısmen hazır' };
+  return               { sinif: 'seviye-dusuk', etiket: 'Tekrar test önerilir' };
+}
+
+function raporuCiz() {
+  var veri = sonuclariOku();
+  var tamam = [], eksik = [];
+  BOLUMLER.forEach(function (b) {
+    var s = skorAl(veri, b.anahtar);
+    if (s === null) eksik.push(b); else tamam.push({ bolum: b, skor: s });
+  });
+
+  $('rapor-tarih').textContent = 'Rapor tarihi: ' + new Date().toLocaleString('tr-TR', {
+    day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+
+  // Eksik bölüm uyarısı
+  var uyari = $('eksik-uyari');
+  if (eksik.length) {
+    uyari.hidden = false;
+    uyari.innerHTML = '';
+    var guclu = document.createElement('strong');
+    guclu.textContent = eksik.length === BOLUMLER.length
+      ? 'Henüz hiçbir bölüm tamamlanmadı. '
+      : 'Eksik bölüm' + (eksik.length > 1 ? 'ler' : '') + ': ' +
+        eksik.map(function (b) { return b.ad; }).join(', ') + '. ';
+    uyari.appendChild(guclu);
+    uyari.appendChild(document.createTextNode(eksik.length === BOLUMLER.length
+      ? 'Rapor için önce bölümleri tamamla.'
+      : 'Toplam skor yalnızca tamamlanan bölümlerden hesaplandı; tam rapor için eksik bölümleri tamamla.'));
+  } else {
+    uyari.hidden = true;
+  }
+
+  // Toplam skor (ağırlıklı ortalama, yalnızca tamamlanan bölümler)
+  var agirlikToplam = 0, puanToplam = 0;
+  tamam.forEach(function (t) {
+    var w = Number(WEIGHTS[t.bolum.anahtar]) || 0;
+    agirlikToplam += w;
+    puanToplam += w * t.skor;
+  });
+  var toplamEl = $('toplam-sayi');
+  var etiket = $('durum-etiket');
+  if (agirlikToplam > 0) {
+    var toplam = Math.round(puanToplam / agirlikToplam);
+    var sv = seviye(toplam);
+    toplamEl.innerHTML = toplam + '<small> / 100</small>';
+    toplamEl.className = 'toplam-sayi ' + sv.sinif;
+    etiket.hidden = false;
+    etiket.textContent = sv.etiket + (eksik.length ? ' (geçici)' : '');
+    etiket.className = 'durum-etiket ' + sv.sinif;
+    $('toplam-aciklama').textContent = tamam.length + ' / ' + BOLUMLER.length +
+      ' bölümün ağırlıklı ortalaması.';
+  } else {
+    toplamEl.textContent = '—';
+    toplamEl.className = 'toplam-sayi';
+    etiket.hidden = true;
+    $('toplam-aciklama').textContent = 'Henüz skor yok.';
+  }
+
+  // En zayıf bölüm (eşitlikte listedeki ilk bölüm)
+  var zayif = null;
+  tamam.forEach(function (t) { if (!zayif || t.skor < zayif.skor) zayif = t; });
+
+  // Çubuk grafik
+  var grafik = $('grafik');
+  grafik.innerHTML = '';
+  BOLUMLER.forEach(function (b) {
+    var t = tamam.filter(function (x) { return x.bolum === b; })[0];
+    var satir = document.createElement('div');
+    satir.className = 'satir' + (t ? '' : ' eksik') + (zayif && t === zayif ? ' zayif' : '');
+
+    var ad = document.createElement('div');
+    ad.className = 'satir-ad';
+    ad.textContent = b.ad;
+    if (zayif && t === zayif) {
+      var z = document.createElement('span');
+      z.className = 'zayif-etiket';
+      z.textContent = '▼ EN ZAYIF';
+      ad.appendChild(z);
+    }
+    var alt = document.createElement('small');
+    alt.textContent = t ? b.alt : 'Tamamlanmadı';
+    ad.appendChild(alt);
+
+    var cubuk = document.createElement('div');
+    cubuk.className = 'cubuk';
+    var dolgu = document.createElement('div');
+    cubuk.appendChild(dolgu);
+
+    var skor = document.createElement('div');
+    skor.className = 'satir-skor';
+    skor.textContent = t ? t.skor : '—';
+
+    satir.appendChild(ad);
+    satir.appendChild(cubuk);
+    satir.appendChild(skor);
+    grafik.appendChild(satir);
+
+    if (t) {
+      // Çubuklar sıfırdan dolarak açılsın
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { dolgu.style.width = t.skor + '%'; });
+      });
+    }
+  });
+
+  // Öneri (yalnızca en az bir bölüm tamamlandıysa)
+  if (zayif) {
+    $('oneri-panel').hidden = false;
+    $('oneri-baslik').textContent = 'Odak alanı: ' + zayif.bolum.ad;
+    $('oneri-metin').textContent = ONERILER[zayif.bolum.anahtar];
+  } else {
+    $('oneri-panel').hidden = true;
+  }
+
+  // Günlük göstergeler (su / öğün / uyku / ruh hali) — varsa şerit olarak eklenir
+  try {
+    var g = JSON.parse(localStorage.getItem('helionDaily') || 'null');
+    if (g && g.state) {
+      var s = g.state, ogunSay = Object.keys(s.ogunler || {}).filter(function(k){ return s.ogunler[k]; }).length;
+      var ruhlar = ['', 'çok düşük', 'düşük', 'orta', 'iyi', 'çok iyi'];
+      $('gunluk-metin').textContent =
+        'Su: ' + (s.su * 250) + ' ml (' + s.su + ' bardak) • Öğün: ' + ogunSay + '/4 • Uyku: ' +
+        Number(s.uyku).toFixed(1) + ' saat • Ruh hali: ' + (ruhlar[s.ruhHali] || 'işaretlenmedi') +
+        (s.not ? ' • Not: ' + s.not : '');
+      $('gunluk-panel').hidden = false;
+    }
+  } catch (e) {}
+
+  // Eğilim: kuyruktaki test kayıtlarından bölüm bazında gün gün seri
+  try {
+    var q = JSON.parse(localStorage.getItem('helionQueue') || '[]');
+    var seriler = {};
+    q.filter(function (e) { return e.tip === 'test'; }).forEach(function (e) {
+      (seriler[e.bolum] = seriler[e.bolum] || []).push({ gun: e.gun, skor: e.skor, zaman: e.zaman });
+    });
+    // Bugünün sonuçları kuyruğa henüz düşmediyse seriye ekle
+    var bugun = new Date().toDateString();
+    Object.keys(veri).forEach(function (k) {
+      var sv = skorAl(veri, k);
+      if (sv === null) return;
+      var s = seriler[k] || [];
+      if (!s.some(function (p) { return p.gun === bugun; })) {
+        s.push({ gun: bugun, skor: sv, zaman: new Date().toISOString() });
+        seriler[k] = s;
+      }
+    });
+    var adlar = { fiziksel: 'Fiziksel Sağlık', hatirlama: 'Hatırlama', sosyallik: 'Sosyallik', tepki: 'Hassasiyet (Tepki)' };
+    var alan = $('egilim-alan'); alan.innerHTML = '';
+    var goster = false;
+    Object.keys(adlar).forEach(function (k) {
+      var s = (seriler[k] || []).slice().sort(function (a, b) { return a.zaman < b.zaman ? -1 : 1; }).slice(-5);
+      if (!s.length) return;
+      goster = true;
+      var satir = document.createElement('div');
+      satir.style.cssText = 'margin:10px 0';
+      var baslik = document.createElement('div');
+      baslik.style.cssText = 'font-weight:700; margin-bottom:5px';
+      baslik.textContent = adlar[k];
+      satir.appendChild(baslik);
+      var cubuklar = document.createElement('div');
+      cubuklar.style.cssText = 'display:flex; gap:6px; flex-wrap:wrap';
+      s.forEach(function (p, i) {
+        var kutu = document.createElement('div');
+        var dusus = i > 0 && p.skor < s[i - 1].skor;
+        kutu.style.cssText = 'background:' + (dusus ? 'rgba(224,82,82,.18)' : 'rgba(62,207,122,.12)') +
+          '; border:1px solid ' + (dusus ? '#e05252' : '#2c5f46') + '; border-radius:9px; padding:6px 10px; font-size:13px';
+        var gunKisa = (p.gun || '').split(' ').slice(1, 3).join(' ');
+        kutu.textContent = gunKisa + ' → ' + p.skor + (dusus ? ' ↓' : (i > 0 && p.skor > s[i - 1].skor ? ' ↑' : ''));
+        cubuklar.appendChild(kutu);
+      });
+      satir.appendChild(cubuklar);
+      alan.appendChild(satir);
+    });
+    $('egilim-panel').hidden = !goster;
+  } catch (e) {}
+}
+
+$('btn-yazdir').addEventListener('click', function () { window.print(); });
+$('btn-ana').addEventListener('click', function () { location.href = ANA_EKRAN; });
+
+// Yazdırmadan önce çubukların son genişlikte olduğundan emin ol
+window.addEventListener('beforeprint', function () {
+  document.querySelectorAll('.cubuk > div').forEach(function (d) { d.style.transition = 'none'; });
+});
+
+// Başka bir sekmede skor değişirse raporu güncelle
+window.addEventListener('storage', function (e) { if (e.key === SONUC_ANAHTARI) raporuCiz(); });
+
+raporuCiz();
+  </script>
+</body>
+</html>

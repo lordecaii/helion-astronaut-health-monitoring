@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HELION — Hassasiyet (Tepki) Testi</title>
+  <style>
+/* HELION — koyu lacivert uzay teması */
+:root {
+  --zemin: #070d1f;
+  --panel: #0f1a36;
+  --panel-acik: #16244a;
+  --cizgi: #263663;
+  --yazi: #e6ecff;
+  --soluk: #8fa0cc;
+  --vurgu: #4cc9f0;
+  --iyi: #5ee6a8;
+  --uyari: #ff6b6b;
+}
+
+* { box-sizing: border-box; }
+
+/* "hidden" özelliği, display tanımlayan sınıflar tarafından ezilmesin */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at top, #12204a 0%, var(--zemin) 60%);
+  color: var(--yazi);
+  font-family: "Segoe UI", Ubuntu, "DejaVu Sans", Arial, sans-serif;
+  line-height: 1.5;
+}
+
+.ust-bar {
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--cizgi);
+}
+.ust-bar h1 { margin: 0; letter-spacing: 6px; color: var(--vurgu); font-size: 26px; }
+.ust-bar p { margin: 2px 0 0; color: var(--soluk); font-size: 14px; }
+
+main { max-width: 960px; margin: 0 auto; padding: 24px 20px 48px; }
+
+h2 { margin: 8px 0 12px; }
+h3 { margin: 0 0 8px; font-size: 16px; color: var(--soluk); }
+
+.ekran { display: none; }
+.ekran.aktif { display: block; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+
+/* Ana ekran kartları */
+.kartlar {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.kart {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--cizgi);
+  border-radius: 12px;
+  transition: border-color .15s, background .15s;
+}
+.kart:hover { border-color: var(--vurgu); background: var(--panel-acik); }
+.kart-baslik { font-weight: 600; }
+.kart-skor { font-size: 28px; color: var(--vurgu); }
+
+.geri {
+  background: none;
+  border: none;
+  color: var(--soluk);
+  padding: 4px 0;
+}
+.geri:hover { color: var(--vurgu); }
+
+.bos { color: var(--soluk); }
+
+.birincil {
+  background: var(--vurgu);
+  color: #04122b;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 28px;
+}
+.birincil:disabled { opacity: .4; cursor: default; }
+
+/* Hassasiyet (Tepki) */
+.tepki-ust { display: flex; align-items: center; gap: 16px; margin: 16px 0 12px; }
+.tepki-durum { color: var(--soluk); }
+
+.tepki-alan {
+  position: relative;
+  height: 380px;
+  background: var(--panel);
+  border: 1px solid var(--cizgi);
+  border-radius: 12px;
+  overflow: hidden;
+  user-select: none;
+  touch-action: manipulation;
+}
+.tepki-alan.bekliyor { cursor: crosshair; }
+
+.tepki-mesaj {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  font-size: 20px;
+  color: var(--soluk);
+  pointer-events: none;
+}
+.tepki-mesaj.uyari { color: var(--uyari); font-weight: 600; }
+.tepki-mesaj.iyi { color: var(--iyi); font-weight: 600; }
+
+.tepki-nokta {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--vurgu);
+  box-shadow: 0 0 18px 4px rgba(76, 201, 240, .6);
+  cursor: pointer;
+}
+
+.tepki-alt {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 20px;
+}
+@media (max-width: 600px) { .tepki-alt { grid-template-columns: 1fr; } }
+
+.tepki-liste { margin: 0; padding-left: 22px; }
+.tepki-liste li { padding: 2px 0; font-variant-numeric: tabular-nums; }
+.tepki-hatali { color: var(--uyari); min-height: 1.5em; margin: 8px 0 0; }
+
+.tepki-sonuc {
+  background: var(--panel);
+  border: 1px solid var(--cizgi);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.tepki-sonuc .skor { font-size: 40px; color: var(--iyi); font-weight: 700; }
+.tepki-sonuc p { margin: 4px 0; }
+
+/* Sosyallik — Durumsal Muhakeme */
+.sos-panel {
+  background: var(--panel);
+  border: 1px solid var(--cizgi);
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-top: 16px;
+}
+.sos-panel > p:first-child { margin-top: 0; }
+.sos-soluk { color: var(--soluk); font-size: 14px; }
+.sos-ilerleme { height: 4px; background: var(--cizgi); border-radius: 2px; margin-top: 16px; overflow: hidden; }
+#sos-ilerleme-dolgu { height: 100%; width: 0; background: var(--vurgu); transition: width .3s; }
+.sos-ust { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.sos-sayac { font-size: 12px; letter-spacing: 2px; color: var(--soluk); text-transform: uppercase; }
+.sos-etiket {
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--cizgi);
+  border-radius: 999px;
+  color: var(--vurgu);
+}
+.sos-baslik { margin: 14px 0 6px; color: var(--yazi); font-size: 18px; }
+.sos-metin { font-size: 17px; line-height: 1.6; margin: 0 0 14px; }
+.sos-secenekler { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.sos-secenekler button {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 12px 14px;
+  background: var(--panel-acik);
+  border: 1px solid var(--cizgi);
+  border-radius: 8px;
+  line-height: 1.45;
+}
+.sos-secenekler button:hover { border-color: var(--vurgu); }
+.sos-secenekler button.secili { border-color: var(--vurgu); background: #1b3566; }
+.sos-harf {
+  flex: 0 0 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--soluk);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--soluk);
+}
+.sos-secenekler button.secili .sos-harf { background: var(--vurgu); border-color: var(--vurgu); color: #04122b; }
+.sos-skor { font-size: 40px; color: var(--iyi); font-weight: 700; margin: 4px 0 16px; }
+.sos-alt { display: flex; justify-content: flex-end; margin-top: 16px; }
+.sos-yetkinlik-satir {
+  display: grid;
+  grid-template-columns: 190px 1fr 48px;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+  font-size: 14px;
+}
+.sos-cubuk { height: 8px; background: var(--cizgi); border-radius: 4px; overflow: hidden; }
+.sos-cubuk > div { height: 100%; background: var(--vurgu); }
+.sos-yetkinlik-satir span:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.sos-inceleme summary { cursor: pointer; color: var(--vurgu); margin: 16px 0 8px; }
+.sos-inceleme ol { padding-left: 20px; margin: 0; }
+.sos-inceleme li { margin-bottom: 12px; font-size: 14px; }
+.sos-inceleme .sos-en-iyi { color: var(--iyi); }
+@media (max-width: 600px) { .sos-yetkinlik-satir { grid-template-columns: 1fr 1fr 40px; } }
+/* Zihinsel Sağlık */
+.zihin-sorular { display: flex; flex-direction: column; gap: 12px; margin: 16px 0 4px; }
+.zihin-soru {
+  background: var(--panel);
+  border: 1px solid var(--cizgi);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.zihin-soru.cevapli { border-color: #2f5f8f; }
+.zihin-soru p { margin: 0 0 10px; font-weight: 600; }
+.zihin-secenekler { display: flex; flex-wrap: wrap; gap: 8px; }
+.zihin-secenekler button {
+  flex: 1 1 110px;
+  padding: 8px 6px;
+  background: var(--panel-acik);
+  border: 1px solid var(--cizgi);
+  border-radius: 8px;
+  font-size: 14px;
+}
+.zihin-secenekler button:hover { border-color: var(--vurgu); }
+.zihin-secenekler button.secili { background: var(--vurgu); color: #04122b; border-color: var(--vurgu); font-weight: 700; }
+.zihin-sorular.kilitli button { pointer-events: none; }
+.tepki-sonuc .seviye-iyi { color: var(--iyi); }
+.tepki-sonuc .seviye-orta { color: #ffd166; }
+.tepki-sonuc .seviye-dusuk { color: var(--uyari); }
+
+/* Hatırlama */
+.hat-sahne {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--yazi);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.hat-sahne.kucuk { font-size: 20px; font-weight: 400; letter-spacing: 0; color: var(--soluk); }
+.hat-mesaj { text-align: center; min-height: 1.5em; margin: 0 0 12px; color: var(--soluk); }
+.hat-mesaj.iyi { color: var(--iyi); font-weight: 600; }
+.hat-mesaj.uyari { color: var(--uyari); font-weight: 600; }
+.hat-form, .hat-butonlar { display: flex; justify-content: center; gap: 12px; }
+.hat-form[hidden], .hat-butonlar[hidden] { display: none; }
+.hat-form input {
+  width: 220px;
+  padding: 10px 14px;
+  font-size: 22px;
+  letter-spacing: 4px;
+  text-align: center;
+  color: var(--yazi);
+  background: var(--panel-acik);
+  border: 1px solid var(--cizgi);
+  border-radius: 8px;
+  outline: none;
+}
+.hat-form input:focus { border-color: var(--vurgu); }
+.ikincil {
+  background: none;
+  border: 1px solid var(--vurgu);
+  color: var(--vurgu);
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 10px 28px;
+}
+.hat-butonlar button { min-width: 140px; }
+.hat-ozet { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 8px 0 16px; }
+.hat-ozet > div { background: var(--panel-acik); border-radius: 10px; padding: 12px 16px; }
+.hat-ozet h4 { margin: 0 0 6px; color: var(--soluk); font-weight: 600; font-size: 14px; }
+.hat-ozet p { margin: 2px 0; font-size: 14px; }
+.hat-ozet .hat-alt-skor { font-size: 24px; font-weight: 700; color: var(--vurgu); }
+@media (max-width: 600px) { .hat-ozet { grid-template-columns: 1fr; } }.hat-sahne.cumle { font-size: 26px; font-weight: 600; letter-spacing: 0; line-height: 1.5; max-width: 720px; margin: 0 auto; }
+.hat-sahne.soru { font-size: 22px; font-weight: 600; letter-spacing: 0; min-height: 120px; }
+.hat-secenekler { max-width: 520px; margin: 0 auto; }
+.hat-secenekler[hidden] { display: none; }
+.hat-cumle-kutu { background: var(--panel-acik); border-radius: 10px; padding: 12px 16px; margin: 8px 0 12px; }
+.hat-cumle-kutu p { margin: 4px 0; font-size: 14px; }  </style>
+</head>
+<body>
+  <header class="ust-bar">
+    <h1>HELION</h1>
+    <p>Astronot göreve hazırlık öz-testi</p>
+  </header>
+
+  <main>
+    <!-- HASSASİYET (TEPKİ) -->
+    <section id="ekran-tepki" class="ekran aktif">
+      <h2>Hassasiyet (Tepki)</h2>
+      <p id="tepki-aciklama">
+        Başla'ya bastıktan sonra alan boş bekler. 2–6 saniye içinde rastgele bir yerde
+        beliren noktaya olabildiğince hızlı tıkla. Nokta çıkmadan tıklamak hatalı deneme sayılır.
+        Toplam 5 geçerli deneme yapılır.
+      </p>
+
+      <div class="tepki-ust">
+        <button id="tepki-basla" class="birincil">Başla</button>
+        <span id="tepki-durum" class="tepki-durum" aria-live="polite"></span>
+      </div>
+
+      <div id="tepki-alan" class="tepki-alan">
+        <div id="tepki-nokta" class="tepki-nokta" hidden></div>
+        <div id="tepki-mesaj" class="tepki-mesaj">Hazır olduğunda Başla'ya bas.</div>
+      </div>
+
+      <div class="tepki-alt">
+        <div>
+          <h3>Denemeler</h3>
+          <ol id="tepki-liste" class="tepki-liste"></ol>
+          <p id="tepki-hatali" class="tepki-hatali"></p>
+        </div>
+        <div id="tepki-sonuc" class="tepki-sonuc" hidden></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+'use strict';
+
+/* HELION — Hassasiyet (Tepki) testi, tek başına çalışan sürüm.
+   Skor, ana uygulamayla aynı yere yazılır: localStorage 'helionResults'.tepki */
+var SONUC_ANAHTARI = 'helionResults';
+
+function sonuclariOku() {
+  try {
+    var veri = JSON.parse(localStorage.getItem(SONUC_ANAHTARI));
+    return veri && typeof veri === 'object' ? veri : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function sonucYaz(anahtar, skor) {
+  var veri = sonuclariOku();
+  veri[anahtar] = skor;
+  localStorage.setItem(SONUC_ANAHTARI, JSON.stringify(veri));
+}
+
+var ekranCikisIslemleri = {};
+
+// Tek dosyalık sürümde ana ekran yok: test bitince sonuç ekranda kalır,
+// "Tekrar Başla" ile yeni test başlatılabilir.
+function ekranGoster() {
+  var basla = document.getElementById('tepki-basla');
+  basla.disabled = false;
+  basla.textContent = 'Tekrar Başla';
+  var donus = document.getElementById('tepki-donus');
+  if (donus) donus.textContent = 'Skor kaydedildi.';
+}
+/* ============================================================
+   HASSASİYET (TEPKİ) BÖLÜMÜ
+   ============================================================ */
+(function () {
+  var DENEME_SAYISI = 5;
+  var BEKLEME_MIN_MS = 2000;
+  var BEKLEME_MAX_MS = 6000;
+  var EN_IYI_MS = 350;   // noktaya tıklama süresi: bu ve altı = 100 puan (salt tepki değil, hedefe tıklama ölçülür — aralık buna göre kalibre edildi)
+  var EN_KOTU_MS = 1200; // bu süre ve üstü = 0 puan
+  var ARA_MS = 2000;     // denemeler arası geri bildirim süresi
+  var DONUS_MS = 0;   // sonuç gösterildikten sonra ana ekrana dönüş
+
+  var alan = document.getElementById('tepki-alan');
+  var nokta = document.getElementById('tepki-nokta');
+  var mesaj = document.getElementById('tepki-mesaj');
+  var basla = document.getElementById('tepki-basla');
+  var durumYazi = document.getElementById('tepki-durum');
+  var liste = document.getElementById('tepki-liste');
+  var hataliYazi = document.getElementById('tepki-hatali');
+  var sonucKutu = document.getElementById('tepki-sonuc');
+
+  // durum: 'bos' | 'bekliyor' | 'nokta' | 'ara' | 'bitti'
+  var durum = 'bos';
+  var sureler = [];
+  var hataliSayisi = 0;
+  var zamanlayici = null;
+  var cerceveIstegi = null;
+  var noktaZamani = 0;
+
+  function zamanlayicilariTemizle() {
+    clearTimeout(zamanlayici);
+    zamanlayici = null;
+    if (cerceveIstegi !== null) cancelAnimationFrame(cerceveIstegi);
+    cerceveIstegi = null;
+  }
+
+  function mesajGoster(metin, sinif) {
+    mesaj.textContent = metin;
+    mesaj.className = 'tepki-mesaj' + (sinif ? ' ' + sinif : '');
+  }
+
+  function durumGuncelle() {
+    durumYazi.textContent = durum === 'bos'
+      ? ''
+      : 'Geçerli deneme: ' + sureler.length + ' / ' + DENEME_SAYISI;
+    hataliYazi.textContent = hataliSayisi > 0 ? 'Hatalı deneme: ' + hataliSayisi : '';
+  }
+
+  function sifirla() {
+    zamanlayicilariTemizle();
+    durum = 'bos';
+    sureler = [];
+    hataliSayisi = 0;
+    nokta.hidden = true;
+    alan.classList.remove('bekliyor');
+    liste.innerHTML = '';
+    sonucKutu.hidden = true;
+    sonucKutu.innerHTML = '';
+    basla.disabled = false;
+    mesajGoster("Hazır olduğunda Başla'ya bas.");
+    durumGuncelle();
+  }
+
+  function testiBaslat() {
+    sifirla();
+    basla.disabled = true;
+    beklemeyeGec();
+  }
+
+  function beklemeyeGec() {
+    durum = 'bekliyor';
+    nokta.hidden = true;
+    alan.classList.add('bekliyor');
+    mesajGoster('');
+    durumGuncelle();
+    var bekleme = BEKLEME_MIN_MS + Math.random() * (BEKLEME_MAX_MS - BEKLEME_MIN_MS);
+    zamanlayici = setTimeout(noktayiGoster, bekleme);
+  }
+
+  function noktayiGoster() {
+    var cap = 56;
+    var kenar = 8;
+    var x = kenar + Math.random() * (alan.clientWidth - cap - 2 * kenar);
+    var y = kenar + Math.random() * (alan.clientHeight - cap - 2 * kenar);
+    nokta.style.left = Math.round(x) + 'px';
+    nokta.style.top = Math.round(y) + 'px';
+    nokta.hidden = false;
+    alan.classList.remove('bekliyor');
+    durum = 'nokta';
+    // Süreyi nokta ekrana gerçekten çizildiği andan başlat.
+    noktaZamani = performance.now();
+    cerceveIstegi = requestAnimationFrame(function (t) {
+      cerceveIstegi = null;
+      if (durum === 'nokta') noktaZamani = t;
+    });
+  }
+
+  function noktayaBasildi(olay) {
+    if (durum !== 'nokta') return;
+    olay.stopPropagation(); // alanın "erken tıklama" kontrolüne düşmesin
+    olay.preventDefault();
+    var sure = Math.max(1, Math.round(performance.now() - noktaZamani));
+    zamanlayicilariTemizle();
+    nokta.hidden = true;
+    sureler.push(sure);
+
+    var satir = document.createElement('li');
+    satir.textContent = sure + ' ms';
+    liste.appendChild(satir);
+
+    if (sureler.length >= DENEME_SAYISI) {
+      bitir();
+    } else {
+      durum = 'ara';
+      mesajGoster(sure + ' ms', 'iyi');
+      durumGuncelle();
+      zamanlayici = setTimeout(beklemeyeGec, ARA_MS);
+    }
+  }
+
+  function alanaBasildi() {
+    if (durum !== 'bekliyor') return;
+    // Nokta çıkmadan tıklandı: hatalı deneme, bu deneme baştan beklenir.
+    zamanlayicilariTemizle();
+    hataliSayisi++;
+    durum = 'ara';
+    alan.classList.remove('bekliyor');
+    mesajGoster('Çok erken! Nokta çıkmadan tıkladın — hatalı deneme. Tekrar bekle…', 'uyari');
+    durumGuncelle();
+    zamanlayici = setTimeout(beklemeyeGec, ARA_MS + 600);
+  }
+
+  function ortanca(dizi) {
+    var s = dizi.slice().sort(function (a, b) { return a - b; });
+    var orta = Math.floor(s.length / 2);
+    return s.length % 2 ? s[orta] : (s[orta - 1] + s[orta]) / 2;
+  }
+
+  function skorHesapla(ms) {
+    // Önce 100 ile çarpılır ki 57.5 gibi değerler kayan nokta hatasıyla 57'ye düşmesin.
+    var puan = (EN_KOTU_MS - ms) * 100 / (EN_KOTU_MS - EN_IYI_MS);
+    return Math.round(Math.max(0, Math.min(100, puan)));
+  }
+
+  function bitir() {
+    durum = 'bitti';
+    var ort = ortanca(sureler);
+    var skor = skorHesapla(ort);
+    sonucYaz('tepki', skor);
+
+    durumGuncelle();
+    mesajGoster('Test tamamlandı.', 'iyi');
+    sonucKutu.hidden = false;
+    sonucKutu.innerHTML =
+      '<h3>Sonuç</h3>' +
+      '<p class="skor">' + skor + ' / 100</p>' +
+      '<p>Ortanca tepki süresi: ' + ort + ' ms</p>' +
+      '<p>Hatalı deneme: ' + hataliSayisi + '</p>' +
+      '<p>Puanlama (noktaya tıklama süresi): 350 ms ve altı = 100, 1200 ms ve üstü = 0.</p>' +
+      '<p id="tepki-donus"></p>';
+
+    var kalan = Math.round(DONUS_MS / 1000);
+    var donusYazi = document.getElementById('tepki-donus');
+    (function say() {
+      if (kalan <= 0) { ekranGoster('ana'); return; }
+      donusYazi.textContent = kalan + ' sn sonra ana ekrana dönülüyor…';
+      kalan--;
+      zamanlayici = setTimeout(say, 1000);
+    })();
+  }
+
+  basla.addEventListener('click', testiBaslat);
+  // 'click' yerine 'pointerdown': basma anını ölçer, bırakma gecikmesi süreye eklenmez.
+  nokta.addEventListener('pointerdown', noktayaBasildi);
+  alan.addEventListener('pointerdown', alanaBasildi);
+
+  // Bölümden çıkılırsa (yarıda bırakma dahil) her şeyi temizle.
+  ekranCikisIslemleri.tepki = sifirla;
+})();
+  </script>
+<a href="index.html" title="Ana ekrana dön" style="position:fixed;left:14px;bottom:14px;z-index:999;background:#0096b2;color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;font-family:inherit;box-shadow:0 4px 14px rgba(0,0,0,.45)">⌂ Ana Ekran</a>
+</body>
+</html>

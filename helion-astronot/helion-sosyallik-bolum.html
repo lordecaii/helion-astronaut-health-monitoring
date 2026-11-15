@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELION — Sosyallik (Görüntülü Görüşme)</title>
+<style>
+  :root{
+    --navy:#0b1f3a; --teal:#0096b2; --teal2:#35c4dc;
+    --text:#e8eef5; --muted:#9db4cc; --card:#122c50; --danger:#e0655f; --ok:#3fbf72;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--navy); color:var(--text); font-family:"Segoe UI",system-ui,-apple-system,sans-serif; min-height:100vh;}
+  header{display:flex; align-items:center; gap:14px; padding:16px 22px; border-bottom:2px solid var(--teal); flex-wrap:wrap;}
+  header .logo{font-size:26px; font-weight:800; letter-spacing:3px;}
+  header .logo span{color:var(--teal2);}
+  header .sub{color:var(--muted); font-size:13px;}
+  header .badge{margin-left:auto; background:#0a1830; border:1px solid var(--teal); color:var(--teal2); font-weight:700; padding:5px 12px; border-radius:20px; font-size:13px;}
+  header .badge.ok{border-color:var(--ok); color:var(--ok);}
+  header .badge.bad{border-color:var(--danger); color:var(--danger);}
+  .progresswrap{height:8px; background:#0a1830;}
+  #progressbar{height:100%; width:0%; background:var(--teal2); transition:width .4s;}
+  main{max-width:900px; margin:0 auto; padding:24px 18px 60px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  h1{font-size:29px; margin-bottom:10px;}
+  h2{font-size:18px; margin-bottom:10px;}
+  p{color:var(--muted); line-height:1.55; margin-bottom:14px;}
+  .card{background:var(--card); border:1px solid #1d3f6e; border-radius:14px; padding:22px; margin-bottom:18px;}
+  .btn{display:inline-block; border:none; cursor:pointer; font-size:17px; font-weight:700; padding:14px 28px; border-radius:10px; background:var(--teal); color:#fff;}
+  .btn:hover{background:var(--teal2);}
+  .btn:disabled{opacity:.45; cursor:not-allowed; background:var(--teal);}
+  .btn.danger{background:var(--danger);}
+  .btn.danger:hover{background:#ef7d77;}
+  .btn.danger:disabled{background:var(--danger);}
+  .btn.secondary{background:transparent; border:2px solid #33517e; color:var(--muted);}
+  .btn.secondary:hover{border-color:var(--muted); color:var(--text);}
+  .btnrow{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:8px;}
+  .err{background:#3a1414; border:1px solid #8a2f2f; color:#f2a9a9; border-radius:10px; padding:12px 16px; font-size:14px; margin-bottom:16px; display:none; line-height:1.5;}
+
+  /* Kod kutusu */
+  .codebox{display:flex; gap:14px; align-items:center; flex-wrap:wrap; justify-content:center; text-align:center;}
+  .codebox input{width:230px; padding:12px 14px; border-radius:10px; border:2px solid #33517e; background:#0a1830; color:var(--text); font-size:26px; font-weight:800; letter-spacing:6px; text-align:center;}
+  .codebox input:focus{outline:none; border-color:var(--teal2);}
+  .codebox input:disabled{opacity:.6;}
+  .hint{width:100%; color:var(--muted); font-size:14px; line-height:1.5;}
+  .codeshow{display:none; text-align:center; margin-bottom:16px;}
+  .codeshow .big{display:inline-block; font-size:52px; font-weight:800; letter-spacing:10px; color:var(--teal2); background:#0a1830; border:2px solid var(--teal); border-radius:14px; padding:8px 26px; margin:6px 0;}
+
+  /* Videolar */
+  .videos{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;}
+  @media (max-width:640px){ .videos{grid-template-columns:1fr;} }
+  .camwrap{position:relative; border-radius:14px; overflow:hidden; border:2px solid var(--teal); background:#000; aspect-ratio:16/9;}
+  .camwrap video{width:100%; height:100%; object-fit:cover; display:block;}
+  .camwrap video.mirror{transform:scaleX(-1);}
+  .camlabel{position:absolute; left:10px; bottom:10px; background:rgba(6,17,34,.82); padding:5px 11px; border-radius:8px; font-size:13px; font-weight:600;}
+  .camempty{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--muted); font-size:14px; padding:16px;}
+
+  /* Puanlama */
+  .crit{background:var(--card); border:1px solid #1d3f6e; border-radius:12px; padding:16px 18px; margin-bottom:12px;}
+  .crit .top{display:flex; justify-content:space-between; align-items:baseline; gap:10px;}
+  .crit .cname{font-weight:700; font-size:17px;}
+  .crit .cval{font-size:26px; font-weight:800; color:var(--teal2); min-width:40px; text-align:right;}
+  .crit .cdesc{color:var(--muted); font-size:13px; margin:4px 0 10px;}
+  .crit input[type=range]{width:100%; accent-color:var(--teal); height:28px; cursor:pointer;}
+  .crit .ticks{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); padding:0 4px;}
+  .crit .vlabel{font-size:13px; color:var(--text); margin-top:6px; text-align:right;}
+  .live{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; background:#0a1830; border:1px solid var(--teal); border-radius:12px; padding:14px 18px; margin:16px 0;}
+  .live b{font-size:28px; color:var(--teal2);}
+  textarea.note{width:100%; min-height:70px; padding:10px 12px; border-radius:8px; border:1px solid #33517e; background:#0a1830; color:var(--text); font-family:inherit; font-size:15px; resize:vertical;}
+
+  .scorebig{font-size:72px; font-weight:800; text-align:center; color:var(--teal2);}
+  .scorelabel{text-align:center; color:var(--muted); margin-bottom:16px;}
+  .scoreline{display:flex; justify-content:space-between; padding:8px 2px; border-bottom:1px solid #1d3f6e; font-size:16px;}
+</style>
+</head>
+<body>
+<div style="text-align:right; color:#5f7ea6; font-size:12.5px; padding:8px 16px 0">HELION — Astronot Uygulaması</div>
+<header>
+  <div class="logo">HEL<span>ION</span></div>
+  <div class="sub">Bölüm 3 — Sosyallik • Görüntülü Görüşme + Puanlayıcı Değerlendirmesi</div>
+  <div class="badge" id="connBadge">Bağlantı: —</div>
+</header>
+<div class="progresswrap"><div id="progressbar"></div></div>
+
+<main>
+  <!-- EKRAN A: Görüşme -->
+  <section class="screen active" id="scr-call">
+    <h1>Görüntülü Görüşme</h1>
+    <p>Puanlayıcı, teste katılan kişiyle görüntülü konuşur; görüşme bitince sohbeti 5 ölçüte göre puanlar.</p>
+
+    <div class="err" id="callErr"></div>
+
+    <div class="card" id="codeCard">
+      <div class="codebox">
+        <input id="codeIn" inputmode="numeric" maxlength="6" placeholder="······" autocomplete="off" aria-label="Görüşme kodu">
+        <button class="btn" id="btnStart">▶ Görüşmeyi Başlat</button>
+        <div class="hint">Kodun yoksa kutuyu <b style="color:var(--text)">boş bırak</b> ve başlat — sana 6 haneli bir kod verilir, bunu karşı tarafa söyle.<br>
+          Sana kod söylendiyse kutuya yaz ve başlat.</div>
+      </div>
+    </div>
+
+    <div class="card" id="dunyaCard" style="margin-top:14px">
+      <h3 style="margin-bottom:6px">📬 Dünya'ya Gönder — mesaj ve değerlendirme</h3>
+      <p style="color:var(--muted); font-size:14px; line-height:1.55">Bağlantı olmasa da yazdıkların kaybolmaz:
+      her şey önce <b style="color:var(--text)">kuyruğa</b> girer, bağlantı kurulduğu anda Dünya'daki üsse gönderilir.</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px">
+        <button class="btn" id="btnSelfMsg" style="flex:1; min-width:200px">🙋 Kendim Hakkında</button>
+        <button class="btn" id="btnOtherRate" style="flex:1; min-width:200px">👥 Başkası Hakkında</button>
+      </div>
+      <p style="color:var(--muted); font-size:13.5px; line-height:1.55; margin-top:10px">Kendim Hakkında: üsse yazılı mesaj gönderirsin.
+      Başkası Hakkında: bir ekip arkadaşını aynı puanlama anahtarıyla değerlendirir, altına notunu eklersin.</p>
+    </div>
+
+    <div class="codeshow" id="codeShow">
+      <div style="color:var(--muted)">Görüşme kodun — karşı tarafa söyle:</div>
+      <div class="big" id="codeBig">——————</div>
+      <div style="color:var(--muted); font-size:14px" id="codeWait">Karşı tarafın katılması bekleniyor…</div>
+    </div>
+
+    <div class="videos">
+      <div class="camwrap">
+        <video id="localVideo" class="mirror" autoplay playsinline muted></video>
+        <div class="camempty" id="localEmpty">Kamera kapalı</div>
+        <div class="camlabel">Sen</div>
+      </div>
+      <div class="camwrap">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <div class="camempty" id="remoteEmpty">Karşı taraf bekleniyor…</div>
+        <div class="camlabel">Karşı taraf</div>
+      </div>
+    </div>
+
+    <div class="btnrow">
+      <button class="btn danger" id="btnEnd" disabled>■ Görüşmeyi Bitir</button>
+    </div>
+  </section>
+
+  <!-- EKRAN: Puan Bekleme (astronot surumu) -->
+  <section class="screen" id="scr-wait">
+    <div class="card" style="text-align:center">
+      <h3>✅ Görüşme bitti</h3>
+      <p id="waitScoreStatus">Puanın, puanlayıcının uygulamasından bekleniyor — geldiğinde kendiliğinden raporuna işlenecek. Ana ekrana dönebilirsin; sayfayı yeniden açtığında bekleyen puan yine düşer.</p>
+      <a class="btn" href="index.html" style="display:inline-block; margin-top:10px; text-decoration:none">Ana Ekrana Dön</a>
+    </div>
+  </section>
+
+  <!-- EKRAN B: Puanlama -->
+  <section class="screen" id="scr-rate">
+    <h1>Puanlama</h1>
+    <p>Bu ekranı <b style="color:var(--text)">puanlayıcı</b> doldurur. Her ölçütü 1 (çok zayıf) ile 5 (çok iyi) arasında değerlendir.</p>
+    <div id="critList"></div>
+    <div class="live"><span>Ölçüt ortalaması: <b id="avgVal">3.0</b> / 5</span><span>Bölüm skoru: <b id="liveScore">60</b> / 100</span></div>
+    <div class="card">
+      <h2>Puanlayıcı notu (isteğe bağlı)</h2>
+      <textarea class="note" id="raterNote" placeholder="Görüşmeyle ilgili gözlemler…"></textarea>
+    </div>
+    <div class="btnrow">
+      <button class="btn secondary" id="btnBackToCall">← Görüşmeye Dön</button>
+      <button class="btn" id="btnSave">Puanı Kaydet →</button>
+    </div>
+  </section>
+
+  <!-- EKRAN C: Skor -->
+  <section class="screen" id="scr-score">
+    <h1 style="text-align:center">Sosyallik Tamamlandı</h1>
+    <div class="scorebig" id="scoreBig">0</div>
+    <div class="scorelabel">bölüm skoru (0–100)</div>
+    <div class="card" id="scoreLines"></div>
+    <p style="text-align:center">Skorun kaydedildi.</p>
+    <p id="queueNote" style="text-align:center; font-weight:700; display:none"></p>
+    <div class="btnrow"><button class="btn" id="btnHome">⌂ Ana Ekrana Dön</button></div>
+  </section>
+
+  <!-- EKRAN D: Kendim Hakkında — üsse yazılı mesaj -->
+  <section class="screen" id="scr-self">
+    <h1>🙋 Kendim Hakkında</h1>
+    <p>Dünya'daki üsse kendinle ilgili bir mesaj yaz. Mesaj önce kuyruğa girer; bağlantı kurulduğu anda üsse gönderilir.</p>
+    <div class="card">
+      <h2>Mesajın</h2>
+      <textarea class="note" id="selfMsg" rows="6" placeholder="Örn: Bugün dizimde hafif zorlanma var, uyku da bölük pörçük. Genel olarak iyiyim ama yarınki görev öncesi dinlenmek istiyorum."></textarea>
+    </div>
+    <div id="selfDurum" style="font-size:14.5px; margin:6px 0"></div>
+    <div class="btnrow">
+      <button class="btn secondary" id="btnSelfBack">← Görüşmeye Dön</button>
+      <button class="btn" id="btnSelfSend">📤 Kuyruğa Al — Üsse Gönderilecek</button>
+    </div>
+  </section>
+
+  <!-- EKRAN E: Başkası Hakkında — kişi seç + puanla + not -->
+  <section class="screen" id="scr-other">
+    <h1>👥 Başkası Hakkında</h1>
+    <div id="otherStep1">
+      <p>Önce söyle: bu değerlendirme <b style="color:var(--text)">kimin hakkında</b>?</p>
+      <div class="card">
+        <h2>Değerlendirilen kişi</h2>
+        <input id="otherName" placeholder="Örn: Kaan" autocomplete="off" style="width:100%; padding:12px; border-radius:8px; border:1px solid #33517e; background:#0a1830; color:#e8eef5; font-size:16px">
+      </div>
+      <div id="otherDurum1" style="font-size:14.5px; margin:6px 0"></div>
+      <div class="btnrow">
+        <button class="btn secondary" id="btnOtherBack1">← Görüşmeye Dön</button>
+        <button class="btn" id="btnOtherNext">Devam → Puanlama</button>
+      </div>
+    </div>
+    <div id="otherStep2" style="display:none">
+      <p><b id="otherKisiAd" style="color:var(--text)"></b> için puanlama — aynı 5 ölçüt, 1 (çok zayıf) ile 5 (çok iyi) arası.</p>
+      <div id="critList2"></div>
+      <div class="live"><span>Ölçüt ortalaması: <b id="avgVal2">3.0</b> / 5</span><span>Skor: <b id="liveScore2">60</b> / 100</span></div>
+      <div class="card">
+        <h2>Kişi hakkında ek not</h2>
+        <textarea class="note" id="otherNote" placeholder="Gözlemlerini yaz: uyku hâli, moral, zorlandığı bir şey…"></textarea>
+      </div>
+      <div id="otherDurum" style="font-size:14.5px; margin:6px 0"></div>
+      <div class="btnrow">
+        <button class="btn secondary" id="btnOtherBack2">← Kişi Seçimine Dön</button>
+        <button class="btn" id="btnOtherSave">📤 Kuyruğa Al — Üsse Gönderilecek</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+/* ============ AYARLAR ============
+   Görüntü ve ses doğrudan iki bilgisayar arasında (eşten eşe) akar.
+   İnternet yalnızca iki tarafın birbirini bulması için kullanılır:
+   - Sinyal: herkese açık ücretsiz MQTT sunucusu (EMQX). Kütüphane gerekmez;
+     MQTT'nin gereken küçük kısmı aşağıda elle yazıldı. Kendi MQTT sunucunuz
+     varsa adresi değiştirmeniz yeterli.
+   - STUN: farklı ağlardaki cihazların dış adreslerini öğrenmesi için.          */
+const SINYAL_SUNUCU = "wss://broker.emqx.io:8084/mqtt";
+const KONU_ONEK = "helion-nasa-sos/v1/";
+const RTC_AYAR = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }] };
+const ANA_EKRAN = "index.html";      // "Ana Ekrana Dön" butonunun gideceği sayfa
+const BAGLANTI_ZAMAN_ASIMI = 30000;  // ms — koda katılırken bu sürede bağlanılamazsa hata
+
+const OLCUTLER = [
+  { key:"gozTemasi",  ad:"Göz Teması",          aciklama:"Konuşurken kameraya / karşı tarafa bakabiliyor mu?" },
+  { key:"akicilik",   ad:"Konuşma Akıcılığı",   aciklama:"Takılmadan, anlaşılır ve düzenli cümlelerle konuşuyor mu?" },
+  { key:"anlama",     ad:"Soruları Anlama",     aciklama:"Sorulanı doğru anlayıp konuya uygun yanıt veriyor mu?" },
+  { key:"katilim",    ad:"Katılım",             aciklama:"Sohbete istekli katılıyor, kendiliğinden katkı yapıyor mu?" },
+  { key:"genel",      ad:"Genel İletişim",      aciklama:"Ses tonu, beden dili ve genel etkileşim nasıl?" }
+];
+const ETIKET = { 1:"Çok zayıf", 2:"Zayıf", 3:"Orta", 4:"İyi", 5:"Çok iyi" };
+
+/* ============ DURUM ============ */
+const $ = id => document.getElementById(id);
+const myId = Math.random().toString(36).slice(2, 10);
+let localStream = null, pc = null, connTimer = null, offerTimer = null;
+let callActive = false, isHost = false, roomCode = null, guestId = null;
+let veriBekleme = false, veriZamanAsimi = null, peerLeft = false;  // görüşme bitince veri kanalı (MQTT) puan gelene kadar açık kalır
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+  $("progressbar").style.width = ({ "scr-call":20, "scr-wait":50, "scr-rate":70, "scr-score":100, "scr-self":45, "scr-other":45 })[id] + "%";
+  window.scrollTo(0, 0);
+}
+function badge(text, cls){
+  const b = $("connBadge");
+  b.textContent = "Bağlantı: " + text;
+  b.className = "badge" + (cls ? " " + cls : "");
+}
+function showErr(msg){
+  const e = $("callErr");
+  e.textContent = "⚠ " + msg + " — Uygulama çalışmaya devam ediyor; tekrar deneyebilir ya da 'Puanlamaya geç' ile devam edebilirsin.";
+  e.style.display = "block";
+}
+function clearErr(){ $("callErr").style.display = "none"; }
+$("codeIn").addEventListener("input", e => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6); });
+$("codeIn").addEventListener("keydown", e => { if (e.key === "Enter") $("btnStart").click(); });
+
+/* ============ KAMERA ============ */
+async function startCamera(){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia)
+    throw new Error("Tarayıcı kameraya erişimi desteklemiyor");
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video:{ width:{ideal:1280}, height:{ideal:720} }, audio:true });
+  } catch(e) {
+    localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false }); // mikrofon yoksa
+  }
+  $("localVideo").srcObject = localStream;
+  $("localEmpty").style.display = "none";
+}
+
+/* ============ MİNİ MQTT İSTEMCİSİ (WebSocket üzerinden, QoS 0) ============ */
+const MQ = {
+  ws: null, ping: null, onMsg: null,
+  enc: new TextEncoder(), dec: new TextDecoder(),
+  str(s){ const b = this.enc.encode(s); return [b.length >> 8, b.length & 255, ...b]; },
+  len(n){ const o = []; do { let d = n % 128; n = Math.floor(n / 128); if (n > 0) d |= 128; o.push(d); } while (n > 0); return o; },
+  pkt(h, body){ return new Uint8Array([h, ...this.len(body.length), ...body]); },
+  connect(topic){
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const done = (fn, arg) => { if (!settled){ settled = true; clearTimeout(t); fn(arg); } };
+      const t = setTimeout(() => done(reject, new Error("Sinyal sunucusuna ulaşılamadı (internet bağlantısını kontrol et)")), 10000);
+      let ws;
+      try { ws = new WebSocket(SINYAL_SUNUCU, "mqtt"); } catch(e) { return done(reject, e); }
+      ws.binaryType = "arraybuffer";
+      this.ws = ws;
+      ws.onopen = () => ws.send(this.pkt(0x10, [...this.str("MQTT"), 4, 2, 0, 60, ...this.str("helion-" + myId)]));
+      ws.onmessage = ev => {
+        const b = new Uint8Array(ev.data), type = b[0] >> 4;
+        let i = 1; while (b[i++] & 128) {}
+        if (type === 2){                                   // CONNACK
+          if (b[i + 1] !== 0) return done(reject, new Error("Sinyal sunucusu bağlantıyı reddetti"));
+          ws.send(this.pkt(0x82, [0, 1, ...this.str(topic), 0]));
+        } else if (type === 9){                            // SUBACK
+          this.ping = setInterval(() => { if (ws.readyState === 1) ws.send(new Uint8Array([0xC0, 0])); }, 30000);
+          done(resolve);
+        } else if (type === 3){                            // PUBLISH
+          const tl = (b[i] << 8) | b[i + 1];
+          const qos = (b[0] >> 1) & 3;
+          const start = i + 2 + tl + (qos ? 2 : 0);
+          let m; try { m = JSON.parse(this.dec.decode(b.slice(start))); } catch(e) { return; }
+          if (this.onMsg) this.onMsg(m);
+        }
+      };
+      ws.onerror = () => done(reject, new Error("Sinyal sunucusuna bağlanılamadı (internet bağlantısını kontrol et)"));
+      ws.onclose = () => { clearInterval(this.ping); done(reject, new Error("Sinyal sunucusu bağlantıyı kapattı")); };
+    });
+  },
+  publish(topic, obj){
+    if (this.ws && this.ws.readyState === 1)
+      this.ws.send(this.pkt(0x30, [...this.str(topic), ...this.enc.encode(JSON.stringify(obj))]));
+  },
+  close(){
+    clearInterval(this.ping);
+    if (this.ws){ this.ws.onclose = null; try { this.ws.send(new Uint8Array([0xE0, 0])); this.ws.close(); } catch(e) {} this.ws = null; }
+    this.onMsg = null;
+  }
+};
+const hostTopic  = code => KONU_ONEK + code + "/host";
+const guestTopic = code => KONU_ONEK + code + "/guest";
+
+/* Tüm ICE adayları SDP'ye girsin diye toplanmayı bekle (tek mesajla gönderim) */
+function waitIce(peer){
+  return new Promise(res => {
+    if (peer.iceGatheringState === "complete") return res();
+    const t = setTimeout(res, 4000);
+    peer.addEventListener("icegatheringstatechange", () => {
+      if (peer.iceGatheringState === "complete"){ clearTimeout(t); res(); }
+    });
+  });
+}
+
+/* ============ WEBRTC ============ */
+function createPeer(){
+  if (typeof RTCPeerConnection === "undefined") throw new Error("Bu tarayıcı WebRTC desteklemiyor");
+  const peer = new RTCPeerConnection(RTC_AYAR);
+  if (localStream) localStream.getTracks().forEach(t => peer.addTrack(t, localStream));
+  else { peer.addTransceiver("video", { direction:"recvonly" }); peer.addTransceiver("audio", { direction:"recvonly" }); }
+  peer.ontrack = ev => {
+    const rv = $("remoteVideo");
+    const stream = ev.streams[0] || new MediaStream([ev.track]);
+    if (rv.srcObject !== stream){
+      rv.srcObject = stream;
+      $("remoteEmpty").style.display = "none";
+      // Tarayıcı sesli otomatik oynatmayı engellerse sessiz oynat
+      rv.play().catch(() => { rv.muted = true; rv.play().catch(() => {}); });
+    }
+  };
+  peer.onconnectionstatechange = () => {
+    const s = peer.connectionState;
+    if (s === "connected"){
+      clearTimeout(connTimer); clearInterval(offerTimer); clearErr(); badge("bağlı ✓", "ok");
+      $("codeShow").style.display = "none";
+    }
+    else if (s === "connecting") badge("bağlanıyor…");
+    else if (s === "disconnected"){ if (!peerLeft) badge("bağlantı zayıf / koptu", "bad"); }
+    else if (s === "failed"){
+      clearTimeout(connTimer); clearInterval(offerTimer);
+      // Karşı taraf puanlamak için ayrıldıysa / görüşme zaten bittiyse bu bir hata
+      // değildir — kırmızı kutu gösterilmez (puan aktarımı veri kanalından sürer).
+      if (peerLeft || veriBekleme || !callActive){ badge("karşı taraf ayrıldı", "bad"); return; }
+      badge("başarısız", "bad");
+      showErr("Kod doğru, iki taraf birbirini buldu ama doğrudan görüntü bağlantısı kurulamadı (ağ güvenlik duvarı ya da mobil veri engelliyor olabilir). Başka bir Wi-Fi ya da telefon hotspot'u ile deneyebilirsin");
+    }
+  };
+  return peer;
+}
+
+/* Gelen sinyal mesajları */
+async function onSignal(m){
+  if (veriBekleme && m.type !== "score") return;  // görüşme bitti; veri kanalında yalnızca puan beklenir
+  if (!m || m.from === myId) return;
+  if (isHost && m.type === "offer"){
+    if (pc && guestId === m.from) return;          // aynı kişinin tekrar gönderdiği teklif
+    if (pc) return;                                // zaten biriyle görüşüyor
+    guestId = m.from;
+    $("codeWait").textContent = "Karşı taraf katılıyor…";
+    badge("bağlanıyor…");
+    pc = createPeer();
+    await pc.setRemoteDescription(m.sdp);
+    await pc.setLocalDescription(await pc.createAnswer());
+    await waitIce(pc);
+    MQ.publish(guestTopic(roomCode), { type:"answer", from: myId, to: guestId, sdp: pc.localDescription });
+  } else if (!isHost && m.type === "answer" && m.to === myId){
+    if (!pc || pc.signalingState !== "have-local-offer") return;
+    clearInterval(offerTimer);
+    badge("bağlanıyor…");
+    await pc.setRemoteDescription(m.sdp);
+  } else if (m.type === "score" && m.room === roomCode && typeof m.score === "number"){
+    // Otomatik puan aktarımı: karşı taraf puanını kaydetti, puan bu cihazın sonuçlarına işlenir.
+    try {
+      const r = JSON.parse(localStorage.getItem("helionResults") || "{}");
+      r.sosyallik = m.score;
+      r.sosyallikDetay = m.detay || {};
+      localStorage.setItem("helionResults", JSON.stringify(r));
+    } catch(e) {}
+    badge("puan alındı ✓", "ok");
+    try { if (m.ts) localStorage.setItem("helionSonPuanTs", String(m.ts)); } catch(e) {}
+    veriBekleme = false; clearTimeout(veriZamanAsimi);  // rapor aktarıldı: veri bağlantısı da kapanır
+    MQ.close();
+    let t = document.getElementById("puanToast");
+    if (!t){
+      t = document.createElement("div");
+      t.id = "puanToast";
+      t.style.cssText = "position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:999;background:#14532d;color:#d9fbe7;border:1.5px solid #3fbf72;padding:14px 22px;border-radius:12px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.5);max-width:92vw;text-align:center";
+      document.body.appendChild(t);
+    }
+    t.textContent = "✓ Sosyallik puanı karşı taraftan otomatik alındı: " + m.score + " / 100 — raporuna işlendi.";
+    var wEl = document.getElementById("waitScoreStatus"); if (wEl) wEl.textContent = "✓ Puanın geldi: " + m.score + " / 100 — raporuna işlendi.";
+    t.style.display = "block";
+    setTimeout(() => { t.style.display = "none"; }, 9000);
+  } else if (m.type === "leave" && (isHost ? m.from === guestId : true)){
+    peerLeft = true; clearTimeout(connTimer); clearInterval(offerTimer); clearErr();
+    badge("karşı taraf ayrıldı", "bad");
+    $("remoteVideo").srcObject = null;
+    $("remoteEmpty").textContent = "Karşı taraf görüşmeden ayrıldı";
+    $("remoteEmpty").style.display = "";
+  }
+}
+
+/* ============ TEK BUTON: BAŞLAT ============
+   Kutu boş  → yeni kod üret, karşı tarafın katılmasını bekle.
+   Kod yazılı → o koda katıl (teklifi biz göndeririz).                     */
+$("btnStart").addEventListener("click", async () => {
+  const code = $("codeIn").value.trim();
+  if (code && code.length !== 6){ showErr("Kod 6 haneli olmalı"); return; }
+  clearErr();
+  $("btnStart").disabled = true; $("codeIn").disabled = true;
+  $("btnEnd").disabled = false; callActive = true; peerLeft = false;
+
+  try { await startCamera(); }
+  catch(e) { showErr("Kamera açılamadı (" + (e.message || e.name) + "). Kamerasız da bağlanmayı deneyebilirsin"); }
+
+  try {
+    badge("sunucuya bağlanıyor…");
+    veriBekleme = false; clearTimeout(veriZamanAsimi); MQ.close();  // önceki bekleme bağlantısı varsa kapat
+    MQ.onMsg = m => onSignal(m).catch(err => showErr("Bağlantı hatası: " + (err.message || err.name)));
+    if (!code){
+      isHost = true;
+      roomCode = String(Math.floor(100000 + Math.random() * 900000));
+      await MQ.connect(hostTopic(roomCode));
+      $("codeBig").textContent = roomCode;
+      $("codeWait").textContent = "Karşı tarafın katılması bekleniyor…";
+      $("codeShow").style.display = "block";
+      $("codeCard").style.display = "none";
+      badge("kod: " + roomCode + " — bekleniyor");
+    } else {
+      isHost = false;
+      roomCode = code;
+      await MQ.connect(guestTopic(roomCode));
+      pc = createPeer();
+      badge("teklif hazırlanıyor…");
+      await pc.setLocalDescription(await pc.createOffer());
+      await waitIce(pc);
+      const offer = { type:"offer", from: myId, sdp: pc.localDescription };
+      MQ.publish(hostTopic(roomCode), offer);
+      // Karşı taraf yanıt verene kadar teklifi birkaç saniyede bir tekrar gönder
+      clearInterval(offerTimer);
+      offerTimer = setInterval(() => MQ.publish(hostTopic(roomCode), offer), 4000);
+      badge("karşı taraf aranıyor…");
+      clearTimeout(connTimer);
+      connTimer = setTimeout(() => {
+        if (pc && !peerLeft && pc.connectionState !== "connected"){
+          clearInterval(offerTimer);
+          const yanitYok = pc.signalingState === "have-local-offer";
+          badge(yanitYok ? "kod bulunamadı" : "zaman aşımı", "bad");
+          showErr(yanitYok
+            ? "Bu koda ait bir görüşme bulunamadı. Kodu kontrol et; karşı tarafın 'Görüşmeyi Başlat'a basıp kodu ekranda görüyor olması gerekir"
+            : "Karşı taraf bulundu ama görüntü bağlantısı " + (BAGLANTI_ZAMAN_ASIMI/1000) + " saniyede kurulamadı. Başka bir ağ ya da telefon hotspot'u ile dene");
+        }
+      }, BAGLANTI_ZAMAN_ASIMI);
+    }
+  } catch(e) {
+    badge("hata", "bad");
+    showErr("Görüşme başlatılamadı: " + (e.message || e.name));
+    resetCall(true);
+  }
+});
+
+/* ============ BİTİR ============ */
+function resetCall(tamKapat){
+  clearTimeout(connTimer); clearInterval(offerTimer);
+  if (roomCode && MQ.ws){
+    MQ.publish(isHost ? guestTopic(roomCode) : hostTopic(roomCode), { type:"leave", from: myId });
+  }
+  // Görüntü/ses bağlantısı her durumda kapanır:
+  try { if (pc) pc.close(); } catch(e) {}
+  pc = null; guestId = null;
+  if (localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  $("localVideo").srcObject = null; $("remoteVideo").srcObject = null; $("remoteVideo").muted = false;
+  $("localEmpty").style.display = ""; $("remoteEmpty").style.display = "";
+  $("remoteEmpty").textContent = "Karşı taraf bekleniyor…";
+  $("codeShow").style.display = "none"; $("codeCard").style.display = "";
+  $("btnStart").disabled = false; $("codeIn").disabled = false;
+  $("btnEnd").disabled = true;
+  callActive = false;
+  if (!tamKapat && roomCode && MQ.ws && MQ.ws.readyState === 1){
+    // Veri kanalı AÇIK kalır: puan, görüşme bittikten sonra da direkt düşsün.
+    // Puan gelince (ya da 10 dakika dolunca) bu bağlantı da kapanır.
+    veriBekleme = true;
+    clearTimeout(veriZamanAsimi);
+    veriZamanAsimi = setTimeout(() => { veriBekleme = false; MQ.close(); }, 10 * 60 * 1000);
+  } else {
+    veriBekleme = false;
+    clearTimeout(veriZamanAsimi);
+    MQ.close();
+    roomCode = null; isHost = false;
+  }
+}
+function goRating(){
+  if (callActive) resetCall();
+  badge(veriBekleme ? "görüşme bitti — puan bekleniyor" : "—");
+  show("scr-rate");
+}
+$("btnEnd").addEventListener("click", () => { if (callActive) resetCall(); badge(veriBekleme ? "görüşme bitti — puan bekleniyor" : "—"); show("scr-wait"); });
+// Astronot surumu: puanlama ekranina giris yok — puan yalnizca puanlayici uygulamasindan gelir.
+var offlinePuan = false;
+// (Cevrimdisi puanlama da puanlayici uygulamasinin isi.)
+$("btnBackToCall").addEventListener("click", () => { clearErr(); show("scr-call"); });
+window.addEventListener("beforeunload", () => { if (callActive || veriBekleme) resetCall(true); });
+
+/* ============ PUANLAMA ============ */
+const puanlar = {};
+function buildCriteria(){
+  const wrap = $("critList");
+  OLCUTLER.forEach(o => {
+    puanlar[o.key] = 3;
+    const d = document.createElement("div");
+    d.className = "crit";
+    d.innerHTML =
+      '<div class="top"><span class="cname">' + o.ad + '</span><span class="cval" id="v_' + o.key + '">3</span></div>' +
+      '<div class="cdesc">' + o.aciklama + '</div>' +
+      '<input type="range" min="1" max="5" step="1" value="3" id="r_' + o.key + '" aria-label="' + o.ad + '">' +
+      '<div class="ticks"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>' +
+      '<div class="vlabel" id="l_' + o.key + '">' + ETIKET[3] + '</div>';
+    wrap.appendChild(d);
+    d.querySelector("input").addEventListener("input", ev => {
+      const v = Number(ev.target.value);
+      puanlar[o.key] = v;
+      $("v_" + o.key).textContent = v;
+      $("l_" + o.key).textContent = ETIKET[v];
+      updateLive();
+    });
+  });
+  updateLive();
+}
+function calc(){
+  const vals = OLCUTLER.map(o => puanlar[o.key]);
+  const avg = vals.reduce((a,b) => a + b, 0) / vals.length;
+  return { avg, score: Math.round(avg / 5 * 100) };   // ortalamanın 100 üzerinden karşılığı
+}
+function updateLive(){
+  const { avg, score } = calc();
+  $("avgVal").textContent = avg.toFixed(1);
+  $("liveScore").textContent = score;
+}
+buildCriteria();
+
+$("btnSave").addEventListener("click", () => {
+  const { avg, score } = calc();
+  try {
+    const r = JSON.parse(localStorage.getItem("helionResults") || "{}");
+    r.sosyallik = score;
+    r.sosyallikDetay = {
+      olcutler: Object.assign({}, puanlar),
+      ortalama: Number(avg.toFixed(2)),
+      not: $("raterNote").value.trim(),
+      tarih: new Date().toISOString()
+    };
+    localStorage.setItem("helionResults", JSON.stringify(r));
+  } catch(e) {}
+  if (offlinePuan) {
+    // Çevrimdışı puanlama: puan kuyruğa da alınır, bağlantı dönünce raporla iletilir
+    try {
+      const q = JSON.parse(localStorage.getItem("helionQueue") || "[]");
+      q.push({ tip: "sosyallik-puan", zaman: new Date().toISOString(),
+               veri: { skor: score, olcutler: Object.assign({}, puanlar), mod: "yuz-yuze-cevrimdisi" } });
+      localStorage.setItem("helionQueue", JSON.stringify(q));
+    } catch(e) {}
+    const qn = $("queueNote");
+    qn.style.display = ""; qn.style.color = "#3ecf7a";
+    qn.textContent = "📥 Puan kuyruğa alındı — Dünya ile bağlantı dönünce raporla birlikte iletilecek.";
+  }
+  $("scoreBig").textContent = score;
+  $("scoreLines").innerHTML = OLCUTLER.map(o =>
+    '<div class="scoreline"><span>' + o.ad + '</span><b>' + puanlar[o.key] + ' / 5</b></div>'
+  ).join("") + '<div class="scoreline" style="border-bottom:none"><span>Ortalama</span><b>' + avg.toFixed(1) + ' / 5</b></div>';
+  show("scr-score");
+});
+
+$("btnHome").addEventListener("click", () => { location.href = ANA_EKRAN; });
+
+show("scr-call");
+</script>
+<script>
+/* ===== PUAN OTOMATIK AKTARIMI (iskelet eklemesi) =====
+   Puan, puanlayıcı kaydedince sinyal kanalından astronotun cihazına
+   KODSUZ otomatik düşer: mesaj "retained" yayınlanır; astronotun sayfası
+   açıksa anında, kapalıysa arka plan dinleyicisi sayfa açılınca uygular.
+   Kod girmek yok.                                                       */
+(function(){
+  "use strict";
+  var KEYS = ["gozTemasi","akicilik","anlama","katilim","genel"];
+  var puanlayiciSayfasi = document.title.indexOf("Puanlayıcı") !== -1;
+
+  /* Bu sayfanın görüşme odası: misafirsen kod kutuda yazılıdır, ev sahibiysen büyük kod alanında. */
+  function roomBilgisi(){
+    var ci = document.getElementById("codeIn");
+    var v = ci && ci.value ? ci.value.trim() : "";
+    if (/^\d{6}$/.test(v)) return { code: v, isHost: false };
+    var cb = document.getElementById("codeBig");
+    var t = cb ? cb.textContent.replace(/\D/g, "") : "";
+    if (/^\d{6}$/.test(t)) return { code: t, isHost: true };
+    return null;
+  }
+
+  /* Puanı görüşmenin sinyal kanalından karşı tarafa otomatik gönder (kalıcı/retained:
+     karşı taraf sayfayı sonra açsa bile odaya girince puanı alır). */
+  function otoGonder(score, detay){
+    var durum = document.getElementById("aktarimOtoDurum");
+    function yaz(t){ if (durum) durum.textContent = t; }
+    var room = roomBilgisi();
+    if (!room) { yaz("Otomatik aktarım: oda kodu bulunamadı — puanı kaydeden cihazda internet olduğundan emin olun."); return; }
+    try {
+      var hedef = room.isHost ? guestTopic(room.code) : hostTopic(room.code);
+      var kendi = room.isHost ? hostTopic(room.code) : guestTopic(room.code);
+      var yuk = { type: "score", from: "puanlayici", room: room.code, score: score, detay: detay, ts: Date.now() };
+      if (MQ.ws && MQ.ws.readyState === 1) {
+        // Görüşmeden kalan açık veri kanalı: puan buradan direkt gider, sonra kanal kapanır.
+        var gonderAcik = function(){ if (MQ.ws && MQ.ws.readyState === 1) MQ.ws.send(MQ.pkt(0x31, [...MQ.str(hedef), ...MQ.enc.encode(JSON.stringify(yuk))])); };
+        gonderAcik();
+        setTimeout(gonderAcik, 350);
+        setTimeout(function(){ MQ.close(); }, 1100);
+        yaz("✓ Puan açık bağlantıdan direkt gönderildi — astronotun sayfasına anında düşer. Bağlantı kapatıldı.");
+        return;
+      }
+      MQ.onMsg = function(){};
+
+      MQ.connect(kendi).then(function(){
+        function gonder(){
+          if (MQ.ws && MQ.ws.readyState === 1)
+            MQ.ws.send(MQ.pkt(0x31, [...MQ.str(hedef), ...MQ.enc.encode(JSON.stringify(yuk))]));  // 0x31 = PUBLISH + retained
+        }
+        gonder();
+        setTimeout(gonder, 350);
+        setTimeout(function(){ MQ.close(); }, 1100);
+        yaz("✓ Puan gönderildi — astronotun sayfası açıksa anında düşer, kapalıysa sayfayı açtığında otomatik alır.");
+      }).catch(function(){ yaz("Otomatik aktarım olmadı (sinyal sunucusuna ulaşılamadı) — interneti kontrol edip puanı tekrar kaydedin."); });
+    } catch(e) { yaz("Otomatik aktarım olmadı — interneti kontrol edip puanı tekrar kaydedin."); }
+  }
+
+  /* 1) Kaydeden tarafta aktarım kodunu göster (modülün kendi Kaydet dinleyicisi önce çalışır) */
+  var btnSave = document.getElementById("btnSave");
+  if (btnSave) btnSave.addEventListener("click", function(){
+    setTimeout(function(){
+      try {
+        var r = JSON.parse(localStorage.getItem("helionResults") || "{}");
+        if (typeof r.sosyallik !== "number" || !r.sosyallikDetay || document.getElementById("aktarimKoduKutu")) return;
+        var kutu = document.createElement("div");
+        kutu.id = "aktarimKoduKutu";
+        kutu.style.cssText = "background:#0a1830;border:1.5px solid #3fbf72;border-radius:12px;padding:16px;margin-top:16px;text-align:center";
+        kutu.innerHTML =
+          '<div style="color:#e8eef5;font-size:15px;font-weight:700">Puan astronota otomatik gönderiliyor</div>' +
+          '<div style="color:#9db4cc;font-size:13px;margin-top:4px">Kod girmek yok — puan, astronotun cihazına kendiliğinden düşer (sayfası kapalıysa bile, açtığında alır).</div>' +
+          '<div id="aktarimOtoDurum" style="color:#7ce3a1;font-size:13.5px;margin-top:10px">Otomatik aktarım deneniyor…</div>';
+        document.getElementById("scr-score").appendChild(kutu);
+        otoGonder(r.sosyallik, r.sosyallikDetay);
+      } catch(e) {}
+    }, 60);
+  });
+
+  /* 2) Astronot tarafı: puan KODSUZ, otomatik düşer.
+     - Görüşme sırasında gelen puan, sinyal işleyicisinde zaten uygulanıyor.
+     - Görüşme bitmiş / sayfa kapalıysa: puan, sinyal sunucusunda "retained" olarak
+       bekler. Bu sayfa, son oda bilgisiyle arka planda dinler; sayfa açıldığı anda
+       bekleyen puan kendiliğinden uygulanır. Kod girmek yok. */
+  var call = document.getElementById("scr-call");
+  if (call && !puanlayiciSayfasi) {
+    function puaniUygula(m){
+      if (m.ts && localStorage.getItem("helionSonPuanTs") === String(m.ts)) return;  // aynı puan ikinci kez işlenmez
+      try {
+        var r = JSON.parse(localStorage.getItem("helionResults") || "{}");
+        r.sosyallik = m.score;
+        r.sosyallikDetay = m.detay || {};
+        localStorage.setItem("helionResults", JSON.stringify(r));
+        if (m.ts) localStorage.setItem("helionSonPuanTs", String(m.ts));
+      } catch(e) {}
+      var t = document.getElementById("puanToast");
+      if (!t){
+        t = document.createElement("div");
+        t.id = "puanToast";
+        t.style.cssText = "position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:999;background:#14532d;color:#d9fbe7;border:1.5px solid #3fbf72;padding:14px 22px;border-radius:12px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.5);max-width:92vw;text-align:center";
+        document.body.appendChild(t);
+      }
+      t.textContent = "✓ Sosyallik puanı otomatik aktarıldı: " + m.score + " / 100 — raporuna işlendi.";
+      var wEl2 = document.getElementById("waitScoreStatus"); if (wEl2) wEl2.textContent = "✓ Puanın geldi: " + m.score + " / 100 — raporuna işlendi.";
+      t.style.display = "block";
+      setTimeout(function(){ t.style.display = "none"; }, 9000);
+    }
+    // Son oda bilgisini sakla (görüşme başlayınca roomCode/isHost dolar)
+    setInterval(function(){
+      try {
+        if (typeof roomCode !== "undefined" && roomCode)
+          localStorage.setItem("helionSonOda", JSON.stringify({ code: roomCode, isHost: !!isHost }));
+      } catch(e) {}
+    }, 1500);
+    // Arka plan dinleyicisi: görüşme bağlı değilken son odayı dinler
+    var dinleWs = null, dinleKonu = null;
+    function dpkt(h, body){
+      var o = [h], n = body.length;
+      do { var d = n % 128; n = Math.floor(n / 128); if (n > 0) d |= 128; o.push(d); } while (n > 0);
+      return new Uint8Array(o.concat(body));
+    }
+    function dmstr(s){ var b = new TextEncoder().encode(s); return [b.length >> 8, b.length & 255].concat(Array.from(b)); }
+    function dinleKapat(){ if (dinleWs){ try { dinleWs.close(); } catch(e) {} dinleWs = null; } }
+    function dinleBaslat(){
+      var oda = null;
+      try { oda = JSON.parse(localStorage.getItem("helionSonOda") || "null"); } catch(e) {}
+      if (!oda || !oda.code) return;
+      var konu = oda.isHost ? hostTopic(oda.code) : guestTopic(oda.code);
+      if (dinleWs && dinleKonu === konu) return;
+      dinleKapat();
+      dinleKonu = konu;
+      var ws;
+      try { ws = new WebSocket(SINYAL_SUNUCU, "mqtt"); } catch(e) { return; }
+      dinleWs = ws;
+      ws.binaryType = "arraybuffer";
+      var cid = "helion-dinle-" + Math.random().toString(36).slice(2, 9);
+      ws.onopen = function(){ ws.send(dpkt(0x10, dmstr("MQTT").concat([4, 2, 0, 60]).concat(dmstr(cid)))); };
+      ws.onmessage = function(ev){
+        var b = new Uint8Array(ev.data), type = b[0] >> 4;
+        var i = 1; while (b[i++] & 128) {}
+        if (type === 2){ ws.send(dpkt(0x82, [0, 1].concat(dmstr(konu)).concat([0]))); }
+        else if (type === 3){
+          var tl = (b[i] << 8) | b[i + 1];
+          var qos = (b[0] >> 1) & 3;
+          var start = i + 2 + tl + (qos ? 2 : 0);
+          try {
+            var m = JSON.parse(new TextDecoder().decode(b.slice(start)));
+            if (m && m.type === "score" && m.room === oda.code && typeof m.score === "number") puaniUygula(m);
+          } catch(e) {}
+        }
+      };
+      ws.onclose = function(){ if (dinleWs === ws) dinleWs = null; };
+      ws.onerror = function(){ try { ws.close(); } catch(e) {} };
+    }
+    setInterval(function(){
+      var aktif = false;
+      try { aktif = (typeof callActive !== "undefined" && callActive) || (typeof MQ !== "undefined" && MQ.ws && MQ.ws.readyState === 1); } catch(e) {}
+      if (aktif) { dinleKapat(); return; }
+      dinleBaslat();
+    }, 3000);
+    dinleBaslat();
+  }
+})();
+</script>
+<script>
+// ===== Dünya'ya Gönder paneli: Kendim Hakkında + Başkası Hakkında (kuyruk) =====
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  function kuyrugaEkle(tip, veri){
+    var q = [];
+    try { q = JSON.parse(localStorage.getItem("helionQueue") || "[]"); } catch(e){}
+    q.push({ tip: tip, zaman: new Date().toISOString(), veri: veri });
+    try { localStorage.setItem("helionQueue", JSON.stringify(q)); } catch(e){}
+  }
+  function ekrana(id){
+    if (typeof show === "function") { show(id); return; }
+    document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+    $(id).classList.add("active");
+  }
+  var bSelf = $("btnSelfMsg"), bOther = $("btnOtherRate");
+  if (bSelf) bSelf.addEventListener("click", function(){ ekrana("scr-self"); });
+  if (bOther) bOther.addEventListener("click", function(){ $("otherStep1").style.display = ""; $("otherStep2").style.display = "none"; ekrana("scr-other"); });
+  $("btnSelfBack").addEventListener("click", function(){ ekrana("scr-call"); });
+  $("btnOtherBack1").addEventListener("click", function(){ ekrana("scr-call"); });
+  $("btnOtherBack2").addEventListener("click", function(){ $("otherStep2").style.display = "none"; $("otherStep1").style.display = ""; });
+
+  // --- Kendim Hakkında: yazılı mesaj kuyruğa ---
+  $("btnSelfSend").addEventListener("click", function(){
+    var d = $("selfDurum"), msg = $("selfMsg").value.trim();
+    if (!msg) { d.style.color = "#f2a9a9"; d.textContent = "Önce bir mesaj yaz."; return; }
+    kuyrugaEkle("mesaj-kendim", { mesaj: msg });
+    d.style.color = "#3ecf7a";
+    d.textContent = "✓ Mesaj kuyruğa alındı — bağlantı kurulduğu anda Dünya'daki üsse gönderilecek.";
+    $("selfMsg").value = "";
+  });
+
+  // --- Başkası Hakkında: adım 1 (kim hakkında?) ---
+  var kisi = "";
+  $("btnOtherNext").addEventListener("click", function(){
+    var d = $("otherDurum1");
+    kisi = $("otherName").value.trim();
+    if (!kisi) { d.style.color = "#f2a9a9"; d.textContent = "Önce kimin hakkında olduğunu yaz."; return; }
+    d.textContent = "";
+    $("otherKisiAd").textContent = kisi;
+    $("otherStep1").style.display = "none";
+    $("otherStep2").style.display = "";
+  });
+
+  // --- Başkası Hakkında: adım 2 (aynı puanlama anahtarı + ek not) ---
+  var OLC = [["gozTemasi","Göz Teması","Konuşurken kameraya / karşı tarafa bakabiliyor mu?"],["akicilik","Konuşma Akıcılığı","Takılmadan, anlaşılır ve düzenli cümlelerle konuşuyor mu?"],["anlama","Soruları Anlama","Sorulanı doğru anlayıp konuya uygun yanıt veriyor mu?"],["katilim","Katılım","Sohbete istekli katılıyor, kendiliğinden katkı yapıyor mu?"],["genel","Genel İletişim","Ses tonu, beden dili ve genel etkileşim nasıl?"]];
+  var ET = {1:"Çok zayıf",2:"Zayıf",3:"Orta",4:"İyi",5:"Çok iyi"};
+  var p2 = {};
+  var wrap = $("critList2");
+  OLC.forEach(function(o){
+    p2[o[0]] = 3;
+    var d = document.createElement("div");
+    d.className = "crit";
+    d.innerHTML = '<div class="top"><span class="cname">' + o[1] + '</span><span class="cval" id="v2_' + o[0] + '">3</span></div>' +
+      '<div class="cdesc">' + o[2] + '</div>' +
+      '<input type="range" min="1" max="5" step="1" value="3" id="r2_' + o[0] + '" aria-label="' + o[1] + '">' +
+      '<div class="ticks"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>' +
+      '<div class="vlabel" id="l2_' + o[0] + '">' + ET[3] + '</div>';
+    wrap.appendChild(d);
+    d.querySelector("input").addEventListener("input", function(ev){
+      var v = Number(ev.target.value);
+      p2[o[0]] = v;
+      $("v2_" + o[0]).textContent = v;
+      $("l2_" + o[0]).textContent = ET[v];
+      canli();
+    });
+  });
+  function ort2(){ var t = 0; OLC.forEach(function(o){ t += p2[o[0]]; }); return t / OLC.length; }
+  function canli(){ var a = ort2(); $("avgVal2").textContent = a.toFixed(1); $("liveScore2").textContent = Math.round(a / 5 * 100); }
+  canli();
+
+  $("btnOtherSave").addEventListener("click", function(){
+    var d = $("otherDurum");
+    var a = ort2(), skor = Math.round(a / 5 * 100);
+    var olc = {}; OLC.forEach(function(o){ olc[o[0]] = p2[o[0]]; });
+    kuyrugaEkle("sosyallik-puan-baskasi", { kisi: kisi, skor: skor, olcutler: olc, not: $("otherNote").value.trim() });
+    d.style.color = "#3ecf7a";
+    d.textContent = "✓ " + kisi + " hakkındaki değerlendirme (skor: " + skor + ") kuyruğa alındı — bağlantı kurulduğu anda Dünya'daki üsse gönderilecek.";
+    $("otherNote").value = "";
+  });
+})();
+</script>
+
+</body>
+</html>
