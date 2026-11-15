@@ -27,7 +27,7 @@ The scientific frame is NASA's **RIDGE** model (Human Research Program): **R**ad
 **E**, and does not measure radiation, it cannot be measured with a camera, and we say so
 openly.
 
-## The story: Day 112
+## The story: Three Days Without Support
 
 On day 112 of a Mars transit, a solar storm cuts all communication with Earth for three days.
 During those days, engineer Arel's reaction score silently falls, **82, 74, 58**, while he
