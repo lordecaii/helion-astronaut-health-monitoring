@@ -186,7 +186,7 @@ device-to-device; a small hand-written MQTT client handles signalling
 - HELION is a self-test and readiness-indicator tool; **it does not make medical diagnoses.**
   A low score does not mean a health problem; regular repetition and trend tracking are the
   point.
-- **Use of Super Intelligence (SI) declaration:** the team used AI assistance (Muse) during
+- **Use of Super Intelligence (SI) declaration:** the team used AI assistance (Muse and Claude Code) during
   the event for software development, design and draft texts. All design decisions, tests
   and final content belong to the team, and every member can explain every part of the system.
 - Final version, Ankara, November 2026.
