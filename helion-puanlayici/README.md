@@ -1,4 +1,4 @@
-# HELION — Rater App (Puanlayıcı)
+# HELION — Rater App
 
 The companion app of **HELION — Astronaut Health Monitoring Software**
 (NASA Space Apps Challenge 2026, Team HELION).
